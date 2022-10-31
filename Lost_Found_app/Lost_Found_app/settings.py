@@ -79,13 +79,23 @@ WSGI_APPLICATION = 'Lost_Found_app.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django',
+#         'NAME': 'lost_found_app',
+# #         # 'CLIENT':
+# #         # {
+# #         #     'host': 'mongodb+srv://<URL>',
+# #         #     'username': 'something',
+# #         #     'password': 'somepass',
+# #         #     'authMechanism': 'SCRAM-SHA-1'
+# #         # },
+# #         # {
+# #         #     'host': 'mongodb://localhost: 27017/',
+# #         # }
+#     }
+# }
 
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
@@ -118,6 +128,18 @@ USE_I18N = True
 USE_L10N = True
 
 USE_TZ = True
+
+COLLECTIONS_NAME = 'collections_name'
+
+DATABASE_NAME = 'database_name'
+
+DATABASE_HOST = 'database_host'
+
+DATABASE_PORT = 'database_port'
+
+USERNAME = 'username'
+
+PASSWORD = 'password'
 
 
 # Static files (CSS, JavaScript, Images)
