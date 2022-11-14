@@ -1,6 +1,6 @@
+
+""""
 from pymongo import MongoClient
-
-
 def get_db_handle(db_name, host, port, username, password):
     client = MongoClient(host=host,
                          port=int(port),
@@ -13,3 +13,4 @@ def get_db_handle(db_name, host, port, username, password):
 
 def get_collection_handle(db_handle, collection_name):
     return db_handle[collection_name]
+"""

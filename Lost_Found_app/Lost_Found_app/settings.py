@@ -38,18 +38,20 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'graphene_django',
+    'users', 
 ]
 
 # Initialize graphene schema
 GRAPHENE = {
-    'SCHEMA': 'app.schema.schema'
+    'SCHEMA': 'Lost_Found_app.schema.schema', 
+    'MIDDLEWARE': ['graphql_jwt.middleware.JSONWebTokenMiddleware'], 
 }
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
+    #'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -79,6 +81,14 @@ WSGI_APPLICATION = 'Lost_Found_app.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
+
+DATABASES = { 
+    'default': { 
+        'ENGINE': 'djongo', 
+        'NAME' : 'PBLdemo', 
+        'ENFORCE_SCHEMA': False, 
+    }
+}
 
 # DATABASES = {
 #     'default': {
@@ -127,19 +137,20 @@ USE_I18N = True
 
 USE_L10N = True
 
-USE_TZ = True
+USE_TZ = True 
 
-COLLECTIONS_NAME = 'collections_name'
+#COLLECTIONS_NAME = 'collections_name'
 
-DATABASE_NAME = 'database_name'
+#DATABASE_NAME = 'database_name'
 
-DATABASE_HOST = 'database_host'
+#DATABASE_HOST = 'database_host'
 
-DATABASE_PORT = 'database_port'
+#DATABASE_PORT = 'database_port'
 
-USERNAME = 'username'
+#USERNAME = 'username'
 
-PASSWORD = 'password'
+#PASSWORD = 'password'  
+
 
 
 # Static files (CSS, JavaScript, Images)
@@ -150,4 +161,9 @@ STATIC_URL = '/static/'
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField' 
+
+AUTHENTICATION_BACKENDS = [
+    'graphql_jwt.backends.JSONWebTokenBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
