@@ -1,11 +1,10 @@
 from graphene import Mutation, ObjectType, List, Field, Int, String, ID
 from graphene_django.types import DjangoObjectType
-from django.template.defaultfilters import slugify
 from django.contrib.auth.models import User
 from graphene_file_upload.scalars import Upload
 import graphql_jwt
 
-from models import *
+from .models import *
 
 
 class UserType(DjangoObjectType):
@@ -187,38 +186,38 @@ class CreateFoundAnnouncement(Mutation):
 
     class Arguments:
         user_id = Int(required=True)
-        tags = List(String(), default=[])
-        location = Field(String)
-        image = Upload(reqired=False)
+        tags = List(String)
+        location = String(required=True)
+        image = Upload(required=False)
         content = String(required=True)
 
-    announce = Field(FoundAnnouncement)
+    #announce = Field(FoundAnnouncement)
 
-    @classmethod
-    def mutate(cls, self, info, user_id, tags, location, image, content):
+    @staticmethod
+    def mutate(_, info, user_id, tags, location, image, content):
         announce = Announcement(id, user_id, tags, location, image, content)
         announce.save()
         return CreateFoundAnnouncement(announce=announce)
 
 
-class AnnouncementMutation(ObjectType):
-    create_new_announcement = CreateFoundAnnouncement.Field()
 
 
-class UpdateFoundAnnouncement(Mutation):
 
-    class Arguments:
-        id = ID()
+class UpdateFoundAnnouncement(Mutation): 
+    content = String()
+
+    class Arguments: 
+        id = Int(required=True )
         user_id = Int(required=True)
-        tags = List(String(), default=[])
-        location = Field(String)
-        image = Upload(reqired=False)
+        tags = List(String)
+        location = String(required=True)
+        image = Upload(required=False)
         content = String(required=True)
 
-    announce = Field(FoundAnnouncement)
+    #announce = Field(FoundAnnouncement)
 
-    @classmethod
-    def mutate(cls, self, info, user_id, tags, location, image, content):
+    @staticmethod
+    def mutate(_,  info, user_id, tags, location, image, content):
         announce = Announcement.objets.get(id=id)
         announce.user_id = user_id
         announce.tags = tags
@@ -229,11 +228,6 @@ class UpdateFoundAnnouncement(Mutation):
         return UpdateFoundAnnouncement(announce=announce)
 
 
-class UpdatedAnnouncementMutation(ObjectType):
-    create_new_announcement = CreateFoundAnnouncement.Field()
-    update_announcement = UpdateFoundAnnouncement.Field()
-
-
 class Mutation(ObjectType):
     """
     Mutations for Users.
@@ -241,4 +235,10 @@ class Mutation(ObjectType):
     create_user = CreateUser.Field()
     login = graphql_jwt.ObtainJSONWebToken.Field()
     verify_token = graphql_jwt.Verify.Field()
-    refresh_token = graphql_jwt.Refresh.Field()
+    refresh_token = graphql_jwt.Refresh.Field() 
+
+    """
+    Mutations for Creating and Updating Announcement
+    """
+    create_new_announcement = CreateFoundAnnouncement.Field() 
+    update_announcement = UpdateFoundAnnouncement.Field()

@@ -29,9 +29,10 @@ def save_user_profile(sender, instance, **kwargs):
 class Announcement(models.Model):
     announcement_id = models.ObjectIdField(primary_key=True)
     user_id = models.ForeignKey('UserProfile', on_delete=models.PROTECT)
-    tags = ArrayField(models.CharField(max_length=1024, blank=True))
-    location = models.URLField(max_length=250)
-    image = models.ImageField(upload_to=image_path, blank=True)
+    tags = ArrayField(models.CharField(max_length=1024, blank=True), default= list)
+    location = models.URLField(max_length=250) 
+    # IMG PATH 
+    image = models.ImageField(upload_to='IMGS/', blank=True)
     content = models.TextField(max_length=5000)
     reward = forms.FloatField(min_value=0.0)
 

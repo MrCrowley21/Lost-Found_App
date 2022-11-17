@@ -85,7 +85,7 @@ WSGI_APPLICATION = 'Lost_Found_app.wsgi.application'
 DATABASES = { 
     'default': { 
         'ENGINE': 'djongo', 
-        'NAME' : 'PBLdemo', 
+        'NAME' : 'demoPBL', 
         'ENFORCE_SCHEMA': False, 
     }
 }
