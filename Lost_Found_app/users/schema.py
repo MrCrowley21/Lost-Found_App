@@ -24,9 +24,9 @@ class FoundAnnouncement(DjangoObjectType):
     class Meta:
         model = Announcement
         fields = (
-            'id',
+            'announcement_id',
             'user_id',
-            'tags',
+            #'tags',
             'location',
             'image',
             'content'
@@ -39,7 +39,7 @@ class LostAnnouncement(DjangoObjectType):
         fields = (
             'id',
             'user_id',
-            'tags',
+            #'tags',
             'location',
             'image',
             'content',
@@ -186,18 +186,26 @@ class CreateFoundAnnouncement(Mutation):
 
     class Arguments:
         user_id = Int(required=True)
-        tags = List(String)
+        #tags = List(String)
         location = String(required=True)
         image = Upload(required=False)
         content = String(required=True)
 
-    #announce = Field(FoundAnnouncement)
-
+    announce = Field(FoundAnnouncement) 
     @staticmethod
-    def mutate(_, info, user_id, tags, location, image, content):
-        announce = Announcement(id, user_id, tags, location, image, content)
-        announce.save()
-        return CreateFoundAnnouncement(announce=announce)
+    def mutate(_, info, image,  user_id,  location,  content):
+        announce = Announcement(   
+            #tags = tags,  
+            image = image, 
+            user_id =  UserProfile.objects.get(id = user_id), 
+            location =  location,
+            content =  content
+            )
+        announce.save()   
+        print(announce.id)
+        return CreateFoundAnnouncement( 
+            id = announce.id
+        )
 
 
 
@@ -214,11 +222,10 @@ class UpdateFoundAnnouncement(Mutation):
         image = Upload(required=False)
         content = String(required=True)
 
-    #announce = Field(FoundAnnouncement)
-
+    announce = Field(FoundAnnouncement)
     @staticmethod
     def mutate(_,  info, user_id, tags, location, image, content):
-        announce = Announcement.objets.get(id=id)
+        announce = Announcement.objects.get(id=id)
         announce.user_id = user_id
         announce.tags = tags
         announce.location = location
