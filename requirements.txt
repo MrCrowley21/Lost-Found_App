@@ -6,9 +6,12 @@ djongo==1.3.6
 dnspython==2.2.1
 graphene==3.1.1
 graphene-django==3.0.0
+graphene-file-upload==1.3.0
 graphql-core==3.2.3
 graphql-relay==3.2.0
+Pillow==9.3.0
 promise==2.3
+psycopg2-binary==2.9.5
 PyJWT==2.6.0
 pymongo==3.12.3
 pytz==2022.6
