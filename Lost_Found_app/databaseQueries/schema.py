@@ -467,4 +467,31 @@ class Mutation(ObjectType):
     """
     create_new_announcement = CreateFoundAnnouncement.Field() 
     update_announcement = UpdateFoundAnnouncement.Field() 
-    delete_found_announcement = DeleteFoundAnnouncement.Field()
+    delete_found_announcement = DeleteFoundAnnouncement.Field() 
+
+    """ 
+     Mutations for Creating and Updating Chat 
+    """ 
+
+    create_chat = CreateChat.Field() 
+    update_chat = UpdateChat.Field()  
+
+    """
+    Mutations for Creating and Updating Comments
+    """ 
+    create_comment = CreateComment.Field() 
+    edit_comment = EditComment.Field() 
+    delete_comment = DeleteComment.Field()  
+    """
+    Mutations for Creating and Updating Message 
+    """   
+    create_message = CreateMessage.Field() 
+    edit_message = EditMessage.Field() 
+    delete_message = DeleteMessage.Field() 
+
+
+
+
+
+
+
