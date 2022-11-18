@@ -48,6 +48,7 @@ class Message(models.Model):
     is_read = models.BooleanField(default=False)
     content = models.TextField(max_length=1000)
 
+
 class Chat(models.Model):
     #chat_id = models.ObjectIdField(primary_key=True)
     user_id = models.ForeignKey('UserProfile', on_delete=models.PROTECT)
