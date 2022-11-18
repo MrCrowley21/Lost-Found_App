@@ -53,7 +53,7 @@ class Chat(models.Model):
     #chat_id = models.ObjectIdField(primary_key=True)
     user_id = models.ForeignKey('UserProfile', on_delete=models.PROTECT)
     register_date = models.DateTimeField(default=datetime.now().time())
-    close_data = models.DateTimeField()
+    close_data = models.DateTimeField()  
 
     
 class Comment(models.Model):
