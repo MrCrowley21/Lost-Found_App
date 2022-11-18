@@ -199,7 +199,6 @@ class CreateFoundAnnouncement(Mutation):
             content =  content
             )
         announce.save()   
-        print(announce.id)
         return CreateFoundAnnouncement( 
             id = announce.id
         ) 
@@ -242,7 +241,113 @@ class UpdateFoundAnnouncement(Mutation):
             announce.image = image
         announce.content = content
         announce.save()
-        return UpdateFoundAnnouncement( id = announce.id, msg = "Success" ) 
+        return UpdateFoundAnnouncement( id = announce.id, msg = "Success" )  
+
+
+
+
+##################### COMMENTS ########################################################   
+class CreateComment(Mutation):
+    id = ID()
+
+    class Arguments: 
+        announcement_id = Int(required=True)
+        content = String(required=True)
+
+    comment = Field(CommentType) 
+    @staticmethod
+    def mutate(_, info, announcement_id, content, ):
+        comment = Comment(   
+            user_id  =  info.context.user,  
+            content =  content,  
+            announcement_id = Announcement.objects.get( id = announcement_id)  )
+        comment.save()   
+        return CreateFoundAnnouncement( 
+            id = comment.id
+        )  
+
+class EditComment(Mutation):
+    content = String()
+
+    class Arguments:  
+        comment_id = Int(required=True)
+        content = String(required=True)
+
+    comment = Field(CommentType) 
+    @staticmethod
+    def mutate(_, info, comment_id, content ): 
+        comment = Comment.objects.get(id = comment_id )
+        comment.content = content 
+        comment.edited_time = datetime.now().time()
+        comment.save()   
+        return CreateFoundAnnouncement( 
+            content = comment.content
+        ) 
+
+class DeleteComment(Mutation):
+    msg  = String()
+    class Arguments:  
+        comment_id = Int(required=True)
+    comment = Field(CommentType) 
+    @staticmethod
+    def mutate(_, info, comment_id): 
+        comment = Comment.objects.get(id = comment_id ).delete()
+        return CreateFoundAnnouncement( 
+            msg = "Comment Deleted succesfully"
+        )
+
+############################# Message ###############################################   
+class CreateMessage(Mutation):
+    id = ID()
+    class Arguments: 
+        chat_id = Int(required=True) 
+        content = String(required=True) 
+
+    message = Field(MessageType) 
+    @staticmethod
+    def mutate(_, info, chat_id, content, ):
+        message = Comment(   
+            sender_id  =  info.context.user,  
+            content =  content, 
+            chat_id = Chat.objects.get( id = chat_id), 
+            registered_date = datetime.date(),
+             )
+        message.save()   
+        return CreateFoundAnnouncement( 
+            id = message.id
+        )  
+
+class EditMessage(Mutation):
+    content = String()
+    class Arguments:  
+        message_id = Int(required=True)
+        content = String(required=True)
+
+    message = Field(MessageType) 
+    @staticmethod
+    def mutate(_, info, message_id, content ): 
+        message = Message.objects.get(id = message_id )
+        message.content = content 
+        message.edited_time = datetime.date()
+        message.save()   
+        return CreateFoundAnnouncement( 
+            content = message.content
+        )  
+
+class DeleteMessage(Mutation):
+    msg  = String()
+    class Arguments:  
+        message_id = Int(required=True)
+    message = Field(MessageType) 
+    @staticmethod
+    def mutate(_, info, message_id): 
+        message = Message.objects.get(id = message_id ).delete()
+        return CreateFoundAnnouncement( 
+            msg = "Message Deleted succesfully"
+        )
+ 
+
+
 
 
 class Mutation(ObjectType):
