@@ -1,11 +1,11 @@
 import graphene
-import users.schema
-class Query(users.schema.Query, graphene.ObjectType):
+import databaseQueries.schema
+class Query(databaseQueries.schema.Query, graphene.ObjectType):
     """
     Projects main Query class, this will inherit multiple queries.
     """
     pass 
-class Mutation(users.schema.Mutation, graphene.ObjectType):
+class Mutation(databaseQueries.schema.Mutation, graphene.ObjectType):
     """
     Projects main Mutation class, this will 
     inherit multiple mutations.

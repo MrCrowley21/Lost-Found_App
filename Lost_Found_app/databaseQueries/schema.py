@@ -202,6 +202,19 @@ class CreateFoundAnnouncement(Mutation):
         print(announce.id)
         return CreateFoundAnnouncement( 
             id = announce.id
+        ) 
+
+class DeleteFoundAnnouncement(Mutation):
+    id = ID()
+    class Arguments: 
+        id_ann = Int(required=True)
+
+    announce = Field(FoundAnnouncement) 
+    @staticmethod
+    def mutate(_, info,  id_ann):
+        announce = Announcement.objects.get(id = id_ann ).delete()  
+        return DeleteFoundAnnouncement( 
+            id = id_ann
         )
 
 
@@ -245,4 +258,5 @@ class Mutation(ObjectType):
     Mutations for Creating and Updating Announcement
     """
     create_new_announcement = CreateFoundAnnouncement.Field() 
-    update_announcement = UpdateFoundAnnouncement.Field()
+    update_announcement = UpdateFoundAnnouncement.Field() 
+    delete_found_announcement = DeleteFoundAnnouncement.Field()
