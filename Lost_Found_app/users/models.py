@@ -38,7 +38,7 @@ class Announcement(models.Model):
 
 
 class Message(models.Model):
-    message_id = models.ObjectIdField(primary_key=True)
+    #message_id = models.ObjectIdField(primary_key=True)
     sender_id = models.ForeignKey('UserProfile', on_delete=models.PROTECT)
     chat_id = models.ForeignKey('Chat', on_delete=models.PROTECT)
     registered_time = models.DateTimeField()
@@ -46,16 +46,15 @@ class Message(models.Model):
     is_read = models.BooleanField(default=False)
     content = models.TextField(max_length=1000)
 
-
 class Chat(models.Model):
-    chat_id = models.ObjectIdField(primary_key=True)
+    #chat_id = models.ObjectIdField(primary_key=True)
     user_id = models.ForeignKey('UserProfile', on_delete=models.PROTECT)
     register_date = models.DateTimeField()
     close_data = models.DateTimeField()
 
-
+    
 class Comment(models.Model):
-    comment_id = models.ObjectIdField(primary_key=True)
+   # comment_id = models.ObjectIdField(primary_key=True)
     user_id = models.ForeignKey('UserProfile', on_delete=models.PROTECT)
     announcement_id = models.ForeignKey('Announcement', on_delete=models.PROTECT)
     registered_time = models.DateTimeField()

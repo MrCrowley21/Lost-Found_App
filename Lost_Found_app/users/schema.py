@@ -37,7 +37,6 @@ class LostAnnouncement(DjangoObjectType):
     class Meta:
         model = Announcement
         fields = (
-            'id',
             'user_id',
             #'tags',
             'location',
@@ -51,7 +50,6 @@ class ChatSystem(DjangoObjectType):
     class Meta:
         model = Chat
         fields = (
-            'id',
             'user_id',
             'register_date',
             'close_date'
@@ -62,7 +60,6 @@ class MessageType(DjangoObjectType):
     class Meta:
         model = Message
         fields = (
-            'id',
             'sender_id',
             'chat_id',
             'registered_date',
@@ -76,7 +73,6 @@ class CommentType(DjangoObjectType):
     class Meta:
         model = Comment
         fields = (
-            'id',
             'user_id',
             'announcement_id',
             'registered_date',
@@ -93,11 +89,12 @@ class Query(object):
     user = Field(UserType, id=Int())
     me = Field(UserType)
 
-    founds = List(FoundAnnouncement)
-    losses = List(LostAnnouncement)
+    found_announcement = List(FoundAnnouncement) 
+    found_ann_search = List(FoundAnnouncement, search = String())
+    lost_announcement = List(LostAnnouncement)
     chats = List(ChatSystem)
     messages = List(MessageType)
-    comments = List(CommentType)
+    comments = List(CommentType) 
 
     @staticmethod
     def resolve_users(self, info, **kwargs):
@@ -136,7 +133,7 @@ class Query(object):
         return Announcement.objects.all()
 
     @staticmethod
-    def resolve_chat(self, info):
+    def resolve_chats(self, info):
         return Chat.objects.all()
 
     @staticmethod
@@ -144,7 +141,7 @@ class Query(object):
         return Message.objects.all()
 
     @staticmethod
-    def resolve_comment(self, info):
+    def resolve_comments(self, info):
         return Comment.objects.all()
 
 
@@ -212,27 +209,27 @@ class CreateFoundAnnouncement(Mutation):
 
 
 class UpdateFoundAnnouncement(Mutation): 
-    content = String()
+    id = ID() 
+    msg = String()
 
     class Arguments: 
-        id = Int(required=True )
-        user_id = Int(required=True)
-        tags = List(String)
+        ann_id = Int(required=True )
+        #user_id = Int(required=True)
+        #tags = List(String)
         location = String(required=True)
         image = Upload(required=False)
         content = String(required=True)
 
     announce = Field(FoundAnnouncement)
     @staticmethod
-    def mutate(_,  info, user_id, tags, location, image, content):
-        announce = Announcement.objects.get(id=id)
-        announce.user_id = user_id
-        announce.tags = tags
-        announce.location = location
-        announce.image = image
+    def mutate(_,  info, ann_id, location, image, content):
+        announce = Announcement.objects.get(id=ann_id)  
+        announce.location = location 
+        if image is not None:
+            announce.image = image
         announce.content = content
         announce.save()
-        return UpdateFoundAnnouncement(announce=announce)
+        return UpdateFoundAnnouncement( id = announce.id, msg = "Success" ) 
 
 
 class Mutation(ObjectType):
