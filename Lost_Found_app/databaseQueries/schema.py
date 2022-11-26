@@ -2,10 +2,13 @@ from graphene import Mutation, ObjectType, List, Field, Int, String, ID
 from graphene_django.types import DjangoObjectType
 from django.contrib.auth.models import User
 from graphene_file_upload.scalars import Upload 
-import datetime
-import graphql_jwt
+import graphql_jwt   
 
-from .models import *
+from datetime import datetime 
+from operator import attrgetter
+
+
+from .models import * 
 
 
 class UserType(DjangoObjectType):
@@ -25,7 +28,7 @@ class FoundAnnouncement(DjangoObjectType):
     class Meta:
         model = Announcement
         fields = (
-            'announcement_id',
+            #'announcement_id',
             'user_id',
             #'tags',
             'location',
@@ -52,9 +55,9 @@ class ChatSystem(DjangoObjectType):
     class Meta:
         model = Chat
         fields = (
-            'user_id',
-            'register_date',
-            'close_date'
+            'user_id', 
+            'register_date' 
+            #'close_date'
         )
 
 
@@ -188,7 +191,7 @@ class CreateFoundAnnouncement(Mutation):
         #tags = List(String)
         location = String(required=True)
         image = Upload(required=False)
-        content = String(required=True)
+        content = String(required=True) 
 
     announce = Field(FoundAnnouncement) 
     @staticmethod
@@ -198,7 +201,7 @@ class CreateFoundAnnouncement(Mutation):
             image = image, 
             user_id =  UserProfile.objects.get(id = user_id), 
             location =  location,
-            content =  content
+            content =  content 
             )
         announce.save()   
         return CreateFoundAnnouncement( 
@@ -209,14 +212,14 @@ class CreateFoundAnnouncement(Mutation):
 class DeleteFoundAnnouncement(Mutation):
     id = ID()
     class Arguments: 
-        id_ann = Int(required=True)
+        ann_id = Int(required=True)
 
     announce = Field(FoundAnnouncement) 
     @staticmethod
-    def mutate(_, info,  id_ann):
-        announce = Announcement.objects.get(id = id_ann ).delete()  
+    def mutate(_, info,  ann_id):
+        Announcement.objects.get(id = ann_id ).delete()  
         return DeleteFoundAnnouncement( 
-            id = id_ann
+            id = ann_id
         )
 
 
@@ -230,7 +233,8 @@ class UpdateFoundAnnouncement(Mutation):
         #tags = List(String)
         location = String(required=True)
         image = Upload(required=False)
-        content = String(required=True)
+        content = String(required=True) 
+
 
     announce = Field(FoundAnnouncement)
     @staticmethod
@@ -239,7 +243,7 @@ class UpdateFoundAnnouncement(Mutation):
         announce.location = location 
         if image is not None:
             announce.image = image
-        announce.content = content
+        announce.content = content 
         announce.save()
         return UpdateFoundAnnouncement( id = announce.id, msg = "Success" ) 
 
@@ -268,7 +272,6 @@ class CreateLostAnnouncement(Mutation):
             reward=reward
             )
         announce.save()
-        print(announce.id)
         return CreateLostAnnouncement(
             id=announce.id
         )
@@ -303,12 +306,13 @@ class UpdateLostAnnouncement(Mutation):
 
     announce = Field(LostAnnouncement)
     @staticmethod
-    def mutate(_,  info, ann_id, location, image, content):
+    def mutate(_,  info, ann_id, location, image, content, reward):
         announce = Announcement.objects.get(id=ann_id)
         announce.location = location
         if image is not None:
             announce.image = image
-        announce.content = content
+        announce.content = content 
+        announce.reward = reward 
         announce.save()
         return UpdateLostAnnouncement(id=announce.id, msg="Success")
 
@@ -319,16 +323,14 @@ class CreateChat(Mutation):
     class Arguments:
         user_id = Int(required=True)
 
-    announce = Field(ChatSystem)
+    chat = Field(ChatSystem)
     @staticmethod
-    def mutate(_, info, user_id):
+    def mutate(_, info, user_id): 
         chat = Chat(
-            user_id=UserProfile.objects.get(id=user_id),
-            register_date=datetime.datetime.now(),
-            close_date=None
-            )
-        chat.save()
-        print(chat.id)
+            user_id=UserProfile.objects.get(id=user_id), 
+            # register_date = datetime.now() 
+            )  
+        chat.save() 
         return CreateChat(
             id=chat.id
         )
@@ -336,7 +338,6 @@ class CreateChat(Mutation):
 
 class UpdateChat(Mutation):
     id = ID()
-    msg = String()
 
     class Arguments:
         chat_id = Int(required=True)
@@ -345,9 +346,9 @@ class UpdateChat(Mutation):
     @staticmethod
     def mutate(_,  info, chat_id):
         chat = Chat.objects.get(id=chat_id)
-        chat.close_data = datetime.datetime.now()
+        chat.close_date = datetime.now() 
         chat.save()
-        return UpdateChat(id=chat.id, msg="Success") 
+        return UpdateChat(id=chat.id) 
 
 
 

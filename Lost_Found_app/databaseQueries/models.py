@@ -3,7 +3,10 @@ from django.contrib.auth.models import User
 from django.contrib.postgres.fields import ArrayField
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from djongo import models 
+from djongo import models   
+
+
+from operator import attrgetter
 
 from datetime import datetime
 
@@ -52,8 +55,8 @@ class Message(models.Model):
 class Chat(models.Model):
     #chat_id = models.ObjectIdField(primary_key=True)
     user_id = models.ForeignKey('UserProfile', on_delete=models.PROTECT)
-    register_date = models.DateTimeField(default=datetime.now().time())
-    close_data = models.DateTimeField()  
+    register_date = models.DateTimeField(default=datetime.now, blank=True) 
+    close_date = models.DateTimeField()  
 
     
 class Comment(models.Model):
