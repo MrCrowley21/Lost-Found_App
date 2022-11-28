@@ -8,9 +8,9 @@ from djongo import models
 
 class UserProfile(models.Model): 
     user = models.OneToOneField(User, on_delete=models.CASCADE) 
-    first_name = models.CharField(max_length=30, blank =False )  
-    last_name = models.CharField(max_length=30, blank =True ) 
-    phone = models.CharField(max_length=20, blank=True )
+    first_name = models.CharField(max_length=30, blank=False)
+    last_name = models.CharField(max_length=30, blank=True)
+    phone = models.CharField(max_length=20, blank=True)
     location = models.CharField(max_length=10, blank=True)
     credit_details = models.CharField(max_length=16, blank=True)
     rating = models.PositiveIntegerField() 
@@ -61,5 +61,9 @@ class Comment(models.Model):
     registered_time = models.DateTimeField()
     edited_time = models.DateTimeField()
     content = models.TextField(max_length=1000)
+
+
+class Tags(models.Model):
+    tag_id = models.CharField(max_length=10, blank=False)
 
 
