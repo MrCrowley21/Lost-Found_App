@@ -1,0 +1,59 @@
+version: '3.1'
+
+volumes:
+  init-db:
+  data-db:
+
+services:
+  mongodb:
+    image: mongo
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: pbltest
+      MONGO_INITDB_ROOT_PASSWORD: UTMpw
+
+  # mongo-express:
+  #   image: mongo-express
+  #   restart: always
+  #   ports:
+  #     - 8080:8080
+  #   environment:
+  #     ME_CONFIG_MONGODB_ADMINUSERNAME: root
+  #     ME_CONFIG_MONGODB_ADMINPASSWORD: mongoadmin
+
+  web:
+    image: app
+    restart: always
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/Lost_Found_app 
+    environment: 
+      - MONGODB_CONNSTRING=mongodb+srv://pbltest:UTMpw@cluster0.ltjzab6.mongodb.net/?retryWrites=true&w=majority
+    ports:
+      - "8000:8000"
+    links:
+      - mongodb
+    depends_on:
+      - migration
+
+  migration:
+    build: .
+    image: app
+    command: python manage.py migrate
+    volumes:
+      - .:/Lost_Found_app
+    links:
+      - mongodb
+    depends_on:
+      - make_migrations
+
+  make_migrations:
+    build: .
+    image: app
+    command: python manage.py makemigrations
+    volumes:
+      - .:/Lost_Found_app
+    links:
+      - mongodb
+    depends_on:
+      - mongodb

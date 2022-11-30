@@ -74,6 +74,15 @@ class CommentType(DjangoObjectType):
         )
 
 
+class TagList(DjangoObjectType):
+    class Meta:
+        model = Tags
+        fields = (
+            'tag_id',
+            'tag_name'
+        )
+
+
 class Query(object):
     """
     User queries.
@@ -85,9 +94,12 @@ class Query(object):
     found_announcement = List(AnnouncementType) 
     found_ann_search = List(AnnouncementType, search = String())
     lost_announcement = List(AnnouncementType)
+    found_ann_by_tag = List(AnnouncementType, tags=String())
+    lost_ann_by_tag = List(AnnouncementType, tags=String())
     chats = List(ChatSystem)
     messages = List(MessageType)
-    comments = List(CommentType) 
+    comments = List(CommentType)
+    tags = List(TagList)
 
     @staticmethod
     def resolve_users(self, info, **kwargs):
@@ -124,6 +136,14 @@ class Query(object):
     @staticmethod
     def resolve_lost_announcement(self, info):
         return Announcement.objects.filter(annType__contains ="LOST")
+
+    @staticmethod
+    def resolve_found_ann_by_tag(self, info, tags):
+        return Announcement.objects.filter(tags=tags)
+
+    @staticmethod
+    def resolve_lost_ann_by_tag(self, info, tags):
+        return Announcement.objects.filter(tags=tags)
 
     @staticmethod
     def resolve_chats(self, info):
@@ -449,6 +469,24 @@ class DeleteMessage(Mutation):
         return DeleteMessage( 
             msg = "Message Deleted succesfully"
         )
+
+        
+class CreateTags(Mutation):
+
+    class Arguments:
+        tag_list = List(String, required=True)
+
+    tag = Field(TagList)
+
+    @staticmethod
+    def mutate(_, info, tag_list):
+        for tag_name in tag_list:
+            tag = Tags(
+                tag_name=tag_name
+                )
+            tag.id = ID()
+            tag.save()
+
 
 class Mutation(ObjectType):
     """
