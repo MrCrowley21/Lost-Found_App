@@ -84,9 +84,15 @@ WSGI_APPLICATION = 'Lost_Found_app.wsgi.application'
 
 DATABASES = { 
     'default': { 
-        'ENGINE': 'djongo', 
-        'NAME' : 'demoPBL', 
-        'ENFORCE_SCHEMA': False, 
+        'ENGINE': 'djongo',    
+        'CLIENT': { 
+            'name' : 'demoPBL', 
+            'host': 'mongodb+srv://pbltest:UTMpw@cluster0.ltjzab6.mongodb.net/?retryWrites=true&w=majority',
+            'username': 'pbltest',
+            'password': 'UTMpw',
+            'authSource': 'admin',
+            'authMechanism': 'SCRAM-SHA-1',
+        }
     }
 }
 
