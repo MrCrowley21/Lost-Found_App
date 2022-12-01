@@ -15,11 +15,7 @@ class UserType(DjangoObjectType):
         model = User
         fields = (
             'id',
-            'first_name',
-            'last_name',
             'last_login',
-            'email',
-            'is_active',
         )
 
 
@@ -27,12 +23,13 @@ class AnnouncementType(DjangoObjectType):
     class Meta:
         model = Announcement
         fields = (
-            'usr_id',
+            'user_id',
             'location',
             'image',
             'content',
             'reward', 
-            'annType'
+            'annType', 
+            'tags'
         )
 
 
@@ -74,12 +71,12 @@ class CommentType(DjangoObjectType):
         )
 
 
-class TagList(DjangoObjectType):
+class TagType(DjangoObjectType):
     class Meta:
-        model = Tags
+        model = Tag
         fields = (
-            'tag_id',
-            'tag_name'
+            'id', 
+            'name'
         )
 
 
@@ -91,15 +88,15 @@ class Query(object):
     user = Field(UserType, id=Int())
     me = Field(UserType)
 
-    found_announcement = List(AnnouncementType) 
-    found_ann_search = List(AnnouncementType, search = String())
-    lost_announcement = List(AnnouncementType)
+    found_announcements = List(AnnouncementType) 
+    found_ann_search = List(AnnouncementType, search=String())
+    lost_announcements = List(AnnouncementType)
     found_ann_by_tag = List(AnnouncementType, tags=String())
     lost_ann_by_tag = List(AnnouncementType, tags=String())
     chats = List(ChatSystem)
     messages = List(MessageType)
     comments = List(CommentType)
-    tags = List(TagList)
+    tags = List(TagType)
 
     @staticmethod
     def resolve_users(self, info, **kwargs):
@@ -126,7 +123,7 @@ class Query(object):
         return user
 
     @staticmethod
-    def resolve_found_announcement(self, info):
+    def resolve_found_announcements(self, info):
         return Announcement.objects.filter(annType__contains ="FOUND") 
 
     @staticmethod
@@ -134,7 +131,7 @@ class Query(object):
         return Announcement.objects.filter(content__icontains=search)
 
     @staticmethod
-    def resolve_lost_announcement(self, info):
+    def resolve_lost_announcements(self, info):
         return Announcement.objects.filter(annType__contains ="LOST")
 
     @staticmethod
@@ -143,7 +140,11 @@ class Query(object):
 
     @staticmethod
     def resolve_lost_ann_by_tag(self, info, tags):
-        return Announcement.objects.filter(tags=tags)
+        return Announcement.objects.filter(tags=tags) 
+
+    @staticmethod
+    def resolve_tags(self, info):
+        return Tag.objects.all()
 
     @staticmethod
     def resolve_chats(self, info):
@@ -164,9 +165,6 @@ class CreateUser(Mutation):
     Attributes for the class define the mutation response.
     """
     id = ID()
-    email = String()
-    first_name = String()
-    last_name = String()
 
     class Arguments:
         """
@@ -185,10 +183,7 @@ class CreateUser(Mutation):
                                         password=password,
                                         )
         return CreateUser(
-            id=user.id,
-            email=user.email,
-            first_name=user.first_name,
-            last_name=user.last_name)
+            id=user.id )
 
 
 class CreateFoundAnnouncement(Mutation):
@@ -201,21 +196,28 @@ class CreateFoundAnnouncement(Mutation):
         image = Upload(required=False)
         content = String(required=True)  
         reward = Int(required=False) 
-        annType = String(required=True)
+        annType = String(required=True) 
+        tag = String(required=True)
 
     announce = Field(AnnouncementType) 
     @staticmethod
-    def mutate(_, info, image,  user_id,  location,  content, reward, annType):
+    def mutate(_, info, image,  user_id,  location,  content, reward, annType,tag):
         announce = Announcement(   
             #tags = tags,  
             image = image, 
             user_id =  UserProfile.objects.get(id = user_id), 
-            usr_id =   UserProfile.objects.get(id = user_id).id, 
             location =  location,
             content =  content, 
-            annType = annType
-            )
-        announce.save()   
+            annType = annType, 
+            reward = reward
+            ) 
+        announce.save() 
+        try:    
+            tagObj = Tag.objects.get(name=tag) 
+        except:
+            tagObj = Tag(name=tag)
+            tagObj.save()
+        announce.tags.add(tagObj)
         return CreateFoundAnnouncement( 
             id = announce.id
         ) 
@@ -476,17 +478,16 @@ class CreateTags(Mutation):
     class Arguments:
         tag_list = List(String, required=True)
 
-    tag = Field(TagList)
-
+    tag = Field(TagType)
     @staticmethod
     def mutate(_, info, tag_list):
         for tag_name in tag_list:
-            tag = Tags(
-                tag_name=tag_name
+            tag = Tag(
+                name=tag_name
                 )
-            tag.id = ID()
-            tag.save()
-
+            tag.save() 
+        return CreateTags()
+ 
 
 class Mutation(ObjectType):
     """
@@ -522,7 +523,12 @@ class Mutation(ObjectType):
     """   
     create_message = CreateMessage.Field() 
     edit_message = EditMessage.Field() 
-    delete_message = DeleteMessage.Field() 
+    delete_message = DeleteMessage.Field()  
+
+    """
+    Mutation Tags 
+    """ 
+    create_tags = CreateTags.Field()
 
 
 

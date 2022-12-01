@@ -34,14 +34,13 @@ def save_user_profile(sender, instance, **kwargs):
 class Announcement(models.Model):
     #announcement_id = models.ObjectIdField(primary_key=True)
     user_id = models.ForeignKey('UserProfile', on_delete=models.PROTECT) 
-    usr_id = models.PositiveIntegerField(blank = False) 
-
     #tags = ArrayField( models.CharField(max_length=1024, blank=True), default= list)
     location = models.URLField(max_length=250) 
     # IMG STORAGE PATH 
     image = models.ImageField(upload_to='IMGS/', blank=True) 
     annType = models.CharField(max_length=5, blank=False )
-    content = models.TextField(max_length=5000)
+    content = models.TextField(max_length=5000) 
+    tags = models.ManyToManyField('Tag')
     reward = models.PositiveSmallIntegerField( default =0, blank =True)
 
 
@@ -71,7 +70,7 @@ class Comment(models.Model):
     content = models.TextField(max_length=1000)
 
 
-class Tags(models.Model):
-    tag_id = models.CharField(max_length=10, blank=False)
+class Tag(models.Model):
+    name = models.CharField(max_length=10, blank=False)
 
 
