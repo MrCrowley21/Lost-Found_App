@@ -18,7 +18,8 @@ class UserType(DjangoObjectType):
             'last_login',
             'email', 
             'first_name',
-            'last_name'
+            'last_name', 
+            'is_active'
         ) 
 class UserProfileType(DjangoObjectType):
     class Meta:
@@ -101,12 +102,12 @@ class Query(object):
     user_profiles = List(UserProfileType)
 
     found_announcements = List(AnnouncementType) 
-    found_ann_search = List(AnnouncementType, search=String())
+    announcements_search_by_content = List(AnnouncementType, search=String())
     lost_announcements = List(AnnouncementType)
     chats = List(ChatSystem)
     messages = List(MessageType)
     comments = List(CommentType)
-    tags = List(TagType) 
+    tags = List(TagType)  
 
     announcement = Field(AnnouncementType, id=Int())  
 
@@ -145,15 +146,9 @@ class Query(object):
     @staticmethod
     def resolve_announcement(self, info, **kwargs):
         """
-        Resolves all users.
+        Resolves a single Annoucnemnt
         """  
-        try:
-            tag = kwargs.get('tags') 
-            dbtag = Tag.objects.get(name=tag)
-            ann = Announcement.objects.get(tag=dbtag)
-            return ann
-        except:
-            return Announcement.objects.all(**kwargs)  
+        return Announcement.objects.get(**kwargs)  
 
 
     @staticmethod
@@ -161,7 +156,7 @@ class Query(object):
         return Announcement.objects.filter(annType__contains ="FOUND") 
 
     @staticmethod
-    def resolve_found_ann_search(self, info, search):
+    def resolve_announcements_search_by_content(self, info, search):
         return Announcement.objects.filter(content__icontains=search)
 
     @staticmethod
@@ -507,19 +502,27 @@ class DeleteMessage(Mutation):
 
         
 class CreateTags(Mutation):
-
+    msg = String()
     class Arguments:
         tag_list = List(String, required=True)
 
     tag = Field(TagType)
     @staticmethod
-    def mutate(_, info, tag_list):
-        for tag_name in tag_list:
-            tag = Tag(
-                name=tag_name
-                )
-            tag.save() 
-        return CreateTags()
+    def mutate(_, info, tag_list): 
+        idString = ""
+        for tag_name in tag_list: 
+            try:
+                tag = Tag.objects.get(name = tag_name)
+                idString += f"{tag_name} already exist. "   
+            except:
+                tag = Tag(
+                    name=tag_name
+                    )  
+                idString += f"Tag {tag_name} have been created."
+                tag.save() 
+        return CreateTags( 
+            msg = idString
+        )
  
 
 class Mutation(ObjectType):

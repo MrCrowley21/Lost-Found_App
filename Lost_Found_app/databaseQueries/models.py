@@ -39,7 +39,8 @@ class UserManager(BaseUserManager):
 
 
 class User(AbstractUser):
-    """User model."""
+    """User model.""" 
+    username = None
     email = models.EmailField(_('email address'), unique=True)
 
     USERNAME_FIELD = 'email'
@@ -106,6 +107,6 @@ class Comment(models.Model):
 
 
 class Tag(models.Model):
-    name = models.CharField(max_length=10, blank=False)
+    name = models.CharField(max_length=10, blank=False,  unique=True)
 
 
