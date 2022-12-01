@@ -84,7 +84,8 @@ WSGI_APPLICATION = 'Lost_Found_app.wsgi.application'
 
 DATABASES = { 
     'default': { 
-        'ENGINE': 'djongo',    
+        'ENGINE': 'djongo', 
+        #'NAME' :'PBLdemo',    
         'CLIENT': { 
             'name' : 'demoPBL', 
             'host': 'mongodb+srv://pbltest:UTMpw@cluster0.ltjzab6.mongodb.net/?retryWrites=true&w=majority',
@@ -155,4 +156,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTHENTICATION_BACKENDS = [
     'graphql_jwt.backends.JSONWebTokenBackend',
     'django.contrib.auth.backends.ModelBackend',
-]
+] 
+
+AUTH_USER_MODEL = 'databaseQueries.User'

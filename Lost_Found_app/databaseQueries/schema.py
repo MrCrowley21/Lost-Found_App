@@ -16,14 +16,25 @@ class UserType(DjangoObjectType):
         fields = (
             'id',
             'last_login',
+            'email', 
+            'first_name',
+            'last_name'
+        ) 
+class UserProfileType(DjangoObjectType):
+    class Meta:
+        model = UserProfile 
+        ( 
+            'user',
+            'image' 
         )
 
 
 class AnnouncementType(DjangoObjectType):
     class Meta:
         model = Announcement
-        fields = (
-            'user_id',
+        fields = ( 
+            'title',
+            'user',
             'location',
             'image',
             'content',
@@ -86,24 +97,33 @@ class Query(object):
     """
     users = List(UserType)
     user = Field(UserType, id=Int())
-    me = Field(UserType)
+    me = Field(UserProfileType) 
+    user_profiles = List(UserProfileType)
 
     found_announcements = List(AnnouncementType) 
     found_ann_search = List(AnnouncementType, search=String())
     lost_announcements = List(AnnouncementType)
-    found_ann_by_tag = List(AnnouncementType, tags=String())
-    lost_ann_by_tag = List(AnnouncementType, tags=String())
     chats = List(ChatSystem)
     messages = List(MessageType)
     comments = List(CommentType)
-    tags = List(TagType)
+    tags = List(TagType) 
+
+    announcement = Field(AnnouncementType, id=Int())  
+
+    announcements_by_tag = List(AnnouncementType,annType = String(),  tag = String())
 
     @staticmethod
     def resolve_users(self, info, **kwargs):
         """
         Resolves all users.
         """
-        return User.objects.all()
+        return User.objects.all() 
+
+    def resolve_user_profiles(self, info, **kwargs):
+        """
+        Resolves all users.
+        """
+        return UserProfile.objects.all()
 
     @staticmethod
     def resolve_user(self, info, **kwargs):
@@ -117,10 +137,24 @@ class Query(object):
         """
         Resolves the logged in user
         """
-        user = info.context.user
+        user = info.context.user 
         if user.is_anonymous:
             raise Exception('You are not logged in')
-        return user
+        return UserProfile.objects.get(user =user)
+
+    @staticmethod
+    def resolve_announcement(self, info, **kwargs):
+        """
+        Resolves all users.
+        """  
+        try:
+            tag = kwargs.get('tags') 
+            dbtag = Tag.objects.get(name=tag)
+            ann = Announcement.objects.get(tag=dbtag)
+            return ann
+        except:
+            return Announcement.objects.all(**kwargs)  
+
 
     @staticmethod
     def resolve_found_announcements(self, info):
@@ -135,12 +169,12 @@ class Query(object):
         return Announcement.objects.filter(annType__contains ="LOST")
 
     @staticmethod
-    def resolve_found_ann_by_tag(self, info, tags):
-        return Announcement.objects.filter(tags=tags)
+    def resolve_announcements_by_tag(self, info, annType, tag ):  
+        try:
+            return Announcement.objects.filter(annType__contains = annType, tags = Tag.objects.get(name=tag))
+        except:
+            pass 
 
-    @staticmethod
-    def resolve_lost_ann_by_tag(self, info, tags):
-        return Announcement.objects.filter(tags=tags) 
 
     @staticmethod
     def resolve_tags(self, info):
@@ -170,28 +204,27 @@ class CreateUser(Mutation):
         """
         Input arguments to create a user.
         """
-        username = String(required=True)
+        email = String(required=True)
         password = String(required=True)
 
     @staticmethod
-    def mutate(_, info, username, password):
+    def mutate(_, info, email, password):
         """
         Use the create_user method and return the
         attributes we specified.
         """
-        user = User.objects.create_user(username=username,
+        user = User.objects.create_user(email=email,
                                         password=password,
                                         )
-        return CreateUser(
-            id=user.id )
+        return CreateUser( id=user.id )
 
 
-class CreateFoundAnnouncement(Mutation):
+class CreateAnnouncement(Mutation):
     id = ID()
 
-    class Arguments:
+    class Arguments: 
+        title = String(required=True)
         user_id = Int(required=True)
-        #tags = List(String)
         location = String(required=True)
         image = Upload(required=False)
         content = String(required=True)  
@@ -201,11 +234,11 @@ class CreateFoundAnnouncement(Mutation):
 
     announce = Field(AnnouncementType) 
     @staticmethod
-    def mutate(_, info, image,  user_id,  location,  content, reward, annType,tag):
+    def mutate(_, info,title, image,  user_id,  location,  content, reward, annType,tag):
         announce = Announcement(   
-            #tags = tags,  
+            title =  title,
             image = image, 
-            user_id =  UserProfile.objects.get(id = user_id), 
+            user =  UserProfile.objects.get(id = user_id), 
             location =  location,
             content =  content, 
             annType = annType, 
@@ -218,7 +251,7 @@ class CreateFoundAnnouncement(Mutation):
             tagObj = Tag(name=tag)
             tagObj.save()
         announce.tags.add(tagObj)
-        return CreateFoundAnnouncement( 
+        return CreateAnnouncement( 
             id = announce.id
         ) 
 
@@ -501,7 +534,7 @@ class Mutation(ObjectType):
     """
     Mutations for Creating and Updating Announcement
     """
-    create_new_announcement = CreateFoundAnnouncement.Field() 
+    create_new_announcement = CreateAnnouncement.Field() 
     update_announcement = UpdateFoundAnnouncement.Field() 
     delete_announcement = DeleteFoundAnnouncement.Field() 
 
