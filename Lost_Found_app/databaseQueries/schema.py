@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 from graphene_file_upload.scalars import Upload 
 import graphql_jwt   
 
-from datetime import datetime 
+from datetime import datetime  
 
 
 from .models import * 
@@ -34,6 +34,7 @@ class AnnouncementType(DjangoObjectType):
     class Meta:
         model = Announcement
         fields = ( 
+            'id',
             'title',
             'user',
             'location',
@@ -41,7 +42,8 @@ class AnnouncementType(DjangoObjectType):
             'content',
             'reward', 
             'annType', 
-            'tags'
+            'tags', 
+            'passed_time'
         )
 
 
@@ -144,28 +146,38 @@ class Query(object):
         return UserProfile.objects.get(user =user)
 
     @staticmethod
-    def resolve_announcement(self, info, **kwargs):
+    def resolve_announcement(self, info, **kwargs):  
+        obj = Announcement.objects.get(**kwargs) 
+        obj.updateTimePassed()
         """
         Resolves a single Annoucnemnt
         """  
-        return Announcement.objects.get(**kwargs)  
+        return Announcement.objects.get(**kwargs)
 
 
     @staticmethod
-    def resolve_found_announcements(self, info):
+    def resolve_found_announcements(self, info): 
+        for obj in Announcement.objects.filter(annType__contains ="FOUND"):
+            obj.updateTimePassed()
         return Announcement.objects.filter(annType__contains ="FOUND") 
 
     @staticmethod
     def resolve_announcements_search_by_content(self, info, search):
+        for obj in  Announcement.objects.filter(content__icontains=search):
+            obj.updateTimePassed()
         return Announcement.objects.filter(content__icontains=search)
 
-    @staticmethod
-    def resolve_lost_announcements(self, info):
+    #@staticmethod
+    def resolve_lost_announcements(self, info): 
+        for obj in  Announcement.objects.filter(annType__contains ="LOST"):
+            obj.updateTimePassed()
         return Announcement.objects.filter(annType__contains ="LOST")
 
     @staticmethod
     def resolve_announcements_by_tag(self, info, annType, tag ):  
         try:
+            for obj in  Announcement.objects.filter(annType__contains = annType, tags = Tag.objects.get(name=tag)):
+                obj.updateTimePassed()
             return Announcement.objects.filter(annType__contains = annType, tags = Tag.objects.get(name=tag))
         except:
             pass 
@@ -211,8 +223,7 @@ class CreateUser(Mutation):
         user = User.objects.create_user(email=email,
                                         password=password,
                                         )
-        return CreateUser( id=user.id )
-
+        return CreateUser( id=user.id ) 
 
 class CreateAnnouncement(Mutation):
     id = ID()
@@ -237,7 +248,8 @@ class CreateAnnouncement(Mutation):
             location =  location,
             content =  content, 
             annType = annType, 
-            reward = reward
+            reward = reward, 
+            created_time = datetime.now()
             ) 
         announce.save() 
         try:    
@@ -536,7 +548,7 @@ class Mutation(ObjectType):
 
     """
     Mutations for Creating and Updating Announcement
-    """
+    """ 
     create_new_announcement = CreateAnnouncement.Field() 
     update_announcement = UpdateFoundAnnouncement.Field() 
     delete_announcement = DeleteFoundAnnouncement.Field() 
