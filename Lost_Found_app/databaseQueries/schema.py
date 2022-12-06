@@ -299,7 +299,34 @@ class UpdateFoundAnnouncement(Mutation):
         if reward is not None:
             announce.reward = reward
         announce.save()
-        return UpdateFoundAnnouncement( id = announce.id ) 
+        return UpdateFoundAnnouncement( id = announce.id )  
+
+
+class UpdateUserProfile(Mutation): 
+    id = ID()   
+    date_of_birth = String()
+    phone_number = String()
+
+
+    class Arguments: 
+        usr_id = Int(required=True )
+        image = Upload(required=False)
+        date_of_birth = String(required=False) 
+        phone_number = String(required = False)
+
+    @staticmethod
+    def mutate(_,  info, usr_id,  image, date_of_birth, phone_number):
+        usr = UserProfile.objects.get(id=usr_id)  
+        if image is not None:
+            usr.image = image
+        if date_of_birth is not None:
+            usr.date_of_birth = date_of_birth 
+        if phone_number is not None:
+            usr.phone = phone_number
+        usr.save()
+        return UpdateUserProfile(id = usr.id,
+                date_of_birth = usr.date_of_birth,
+                phone_number = usr.phone ) 
 
 
 
@@ -576,7 +603,9 @@ class Mutation(ObjectType):
     """
     Mutation Tags 
     """ 
-    create_tags = CreateTags.Field()
+    create_tags = CreateTags.Field() 
+
+    update_user_profile = UpdateUserProfile.Field()
 
 
 

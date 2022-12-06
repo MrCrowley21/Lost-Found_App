@@ -56,7 +56,8 @@ class UserProfile(models.Model):
     phone = models.CharField(max_length=20, blank=True)
     location = models.CharField(max_length=10, blank=True)
     credit_details = models.CharField(max_length=16, blank=True) 
-    image = models.ImageField(upload_to='IMG/', blank=True) 
+    image = models.ImageField(upload_to='IMG/', blank=True)  
+    date_of_birth = models.DateField(blank = True)
     rating = models.PositiveIntegerField(blank=True) 
 
 @receiver(post_save, sender=User)
