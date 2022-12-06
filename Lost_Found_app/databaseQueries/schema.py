@@ -313,16 +313,27 @@ class UpdateUserProfile(Mutation):
         image = Upload(required=False)
         date_of_birth = String(required=False) 
         phone_number = String(required = False)
+        first_name = String(required = False )
+        last_name = String(required = False)
 
     @staticmethod
-    def mutate(_,  info, usr_id,  image, date_of_birth, phone_number):
-        usr = UserProfile.objects.get(id=usr_id)  
+    def mutate(_,  info, usr_id,  image, date_of_birth, phone_number, first_name, last_name):
+        usr = UserProfile.objects.get(id=usr_id)   
+        if first_name is not None:
+            mainUser = User.objects.get(id=usr_id)
+            mainUser.first_name = first_name
+            mainUser.save() 
+        if last_name is not None:
+            mainUser = User.objects.get(id=usr_id)
+            mainUser.last_name = last_name
+            mainUser.save()
         if image is not None:
             usr.image = image
         if date_of_birth is not None:
             usr.date_of_birth = date_of_birth 
         if phone_number is not None:
-            usr.phone = phone_number
+            usr.phone = phone_number 
+        
         usr.save()
         return UpdateUserProfile(id = usr.id,
                 date_of_birth = usr.date_of_birth,
