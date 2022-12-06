@@ -26,7 +26,10 @@ class UserProfileType(DjangoObjectType):
         model = UserProfile 
         ( 
             'user',
-            'image' 
+            'image', 
+            'phone',
+            'date_of_birth'
+
         )
 
 
@@ -99,9 +102,10 @@ class Query(object):
     User queries.
     """
     users = List(UserType)
+    user = Field(UserType, id=Int()) 
+    user_profile = Field(UserProfileType, id = Int())
     user = Field(UserType, id=Int())
     me = Field(UserProfileType) 
-    user_profiles = List(UserProfileType)
 
     found_announcements = List(AnnouncementType) 
     announcements_search_by_content = List(AnnouncementType, search=String())
@@ -133,7 +137,11 @@ class Query(object):
         """
         Resolves a single user by ID.
         """
-        return User.objects.get(**kwargs)
+        return User.objects.get(**kwargs) 
+
+    @staticmethod
+    def resolve_user_profile(self, info, **kwargs):
+        return UserProfile.objects.get(**kwargs)
 
     @staticmethod
     def resolve_me(self, info):
