@@ -184,9 +184,9 @@ class Query(object):
     @staticmethod
     def resolve_announcements_by_tag(self, info, annType, tag ):  
         try:
-            for obj in  Announcement.objects.filter(annType__contains = annType, tags = Tag.objects.get(name=tag)):
+            for obj in  Announcement.objects.filter(annType__contains = annType.upper(), tags = Tag.objects.get(name=tag)):
                 obj.updateTimePassed()
-            return Announcement.objects.filter(annType__contains = annType, tags = Tag.objects.get(name=tag))
+            return Announcement.objects.filter(annType__contains = annType.upper(), tags = Tag.objects.get(name=tag))
         except:
             pass 
 
@@ -255,7 +255,7 @@ class CreateAnnouncement(Mutation):
             user =  UserProfile.objects.get(id = user_id), 
             location =  location,
             content =  content, 
-            annType = annType, 
+            annType = annType.upper(), 
             reward = reward, 
             created_time = datetime.now()
             ) 
@@ -326,7 +326,7 @@ class UpdateUserProfile(Mutation):
 
     @staticmethod
     def mutate(_,  info, usr_id,  image, date_of_birth, phone_number, first_name, last_name):
-        usr = UserProfile.objects.get(id=usr_id)   
+        usr = UserProfile.objects.get(id=usr_id)     
         if first_name is not None:
             mainUser = User.objects.get(id=usr_id)
             mainUser.first_name = first_name
@@ -334,7 +334,7 @@ class UpdateUserProfile(Mutation):
         if last_name is not None:
             mainUser = User.objects.get(id=usr_id)
             mainUser.last_name = last_name
-            mainUser.save()
+            mainUser.save() 
         if image is not None:
             usr.image = image
         if date_of_birth is not None:
@@ -347,74 +347,6 @@ class UpdateUserProfile(Mutation):
                 date_of_birth = usr.date_of_birth,
                 phone_number = usr.phone ) 
 
-
-
-# class CreateLostAnnouncement(Mutation):
-#     id = ID()
-
-#     class Arguments:
-#         user_id = Int(required=True)
-#         #tags = List(String)
-#         location = String(required=True)
-#         image = Upload(required=False)
-#         content = String(required=True)
-#         reward = Int(required=False)
-
-#     announce = Field(LostAnnouncement)
-#     @staticmethod
-#     def mutate(_, info, image,  user_id,  location,  content, reward):
-#         announce = Announcement(
-#             #tags = tags,
-#             image=image,
-#             user_id=UserProfile.objects.get(id=user_id),
-#             location=location,
-#             content=content,
-#             reward=reward
-#             )
-#         announce.save()
-#         return CreateLostAnnouncement(
-#             id=announce.id
-#         )
-
-
-# class DeleteLostAnnouncement(Mutation):
-#     id = ID()
-#     class Arguments:
-#         id_ann = Int(required=True)
-
-#     announce = Field(LostAnnouncement)
-#     @staticmethod
-#     def mutate(_, info,  id_ann):
-#         announce = Announcement.objects.get(id=id_ann).delete()
-#         return DeleteLostAnnouncement(
-#             id=id_ann
-#         )
-
-
-# class UpdateLostAnnouncement(Mutation):
-#     id = ID()
-#     msg = String()
-
-#     class Arguments:
-#         ann_id = Int(required=True )
-#         #user_id = Int(required=True)
-#         #tags = List(String)
-#         location = String(required=True)
-#         image = Upload(required=False)
-#         content = String(required=True)
-#         reward = Int(required=False)
-
-#     announce = Field(LostAnnouncement)
-#     @staticmethod
-#     def mutate(_,  info, ann_id, location, image, content, reward):
-#         announce = Announcement.objects.get(id=ann_id)
-#         announce.location = location
-#         if image is not None:
-#             announce.image = image
-#         announce.content = content 
-#         announce.reward = reward 
-#         announce.save()
-#         return UpdateLostAnnouncement(id=announce.id, msg="Success")
 
 
 class CreateChat(Mutation):

@@ -52,7 +52,7 @@ class User(AbstractUser):
     objects = UserManager()
 
 class UserProfile(models.Model): 
-    user = models.OneToOneField(User, on_delete=models.CASCADE) 
+    user = models.ForeignKey('User', on_delete=models.CASCADE) 
     phone = models.CharField(max_length=20, blank=True)
     location = models.CharField(max_length=10, blank=True)
     credit_details = models.CharField(max_length=16, blank=True) 
@@ -66,9 +66,11 @@ def create_user_profile(sender, instance, created, **kwargs):
         UserProfile.objects.create(user=instance)
 
 
-@receiver(post_save, sender=User)
-def save_user_profile(sender, instance, **kwargs):
-    instance.userprofile.save()
+# @receiver(post_save, sender=User)
+# def save_user_profile(sender, instance, first_name=None, last_name=None, **kwargs):
+#     instance.first_name = first_name 
+#     instance.last_name = last_name
+#     instance.userprofile.save()
 
 
 class Announcement(models.Model):
