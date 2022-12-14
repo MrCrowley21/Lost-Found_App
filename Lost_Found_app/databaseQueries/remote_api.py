@@ -6,8 +6,8 @@ from dotenv import load_dotenv
 class RemoteAPI:
     def __init__(self):
         load_dotenv()
-        self.app_id = os.getenv('APP_ID')
-        self.secret = os.getenv('APP_SECRET')
+        self.app_id = os.getenv('APP_ID') 
+        self.secret = os.getenv('APP_SECRET')  
 
     def create_user(self, name_surname):
         url = 'https://www.saltedge.com/api/v5/customers/'
@@ -19,9 +19,12 @@ class RemoteAPI:
             response = response["data"]         
             remote_id = response["id"]
             user_secret = response['secret']
-            creation_date = response["created_at"] 
+            creation_date = response["created_at"]  
+            print(response)
+            return response
         except:
             print(response["error"])
+            return response
             
 
 

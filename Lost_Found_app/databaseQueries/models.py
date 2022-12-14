@@ -58,7 +58,9 @@ class UserProfile(models.Model):
     credit_details = models.CharField(max_length=16, blank=True) 
     image = models.ImageField(upload_to='IMG/', blank=True)  
     date_of_birth = models.DateField(blank = True)
-    rating = models.PositiveIntegerField(blank=True) 
+    rating = models.PositiveIntegerField(blank=True)   
+
+
 
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
@@ -66,11 +68,17 @@ def create_user_profile(sender, instance, created, **kwargs):
         UserProfile.objects.create(user=instance)
 
 
+class ApiCredentials(models.Model): 
+    user = models.ForeignKey('UserProfile', on_delete=models.CASCADE) 
+    remote_id = models.CharField(max_length=70, blank=True)
+    secret = models.CharField(max_length=70, blank=True)
+    created_at = models.CharField(max_length=20, blank=True)
 # @receiver(post_save, sender=User)
 # def save_user_profile(sender, instance, first_name=None, last_name=None, **kwargs):
 #     instance.first_name = first_name 
 #     instance.last_name = last_name
 #     instance.userprofile.save()
+
 
 
 class Announcement(models.Model):

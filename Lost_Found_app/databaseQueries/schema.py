@@ -4,11 +4,15 @@ from django.contrib.auth.models import User
 from graphene_file_upload.scalars import Upload 
 import graphql_jwt   
 
-from datetime import datetime  
+from datetime import datetime   
+
+
+from .remote_api import RemoteAPI
 
 
 from .models import * 
 
+api = RemoteAPI()
 
 class UserType(DjangoObjectType):
     class Meta:
@@ -326,7 +330,20 @@ class UpdateUserProfile(Mutation):
 
     @staticmethod
     def mutate(_,  info, usr_id,  image, date_of_birth, phone_number, first_name, last_name):
-        usr = UserProfile.objects.get(id=usr_id)     
+        usr = UserProfile.objects.get(id=usr_id)      
+        if first_name and last_name is not None:
+            try:
+                api_cred = ApiCredentials.objects.get(id = usr_id)
+            except:
+                res = api.create_user( first_name + " " + last_name )  
+                api_cred = ApiCredentials(
+                            user = usr,
+                            remote_id =  res["id"],
+                            secret = res["secret"],
+                            created_at = res["created_at"]
+                            )
+                api_cred.save()
+             
         if first_name is not None:
             mainUser = User.objects.get(id=usr_id)
             mainUser.first_name = first_name
