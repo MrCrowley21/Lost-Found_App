@@ -8,11 +8,12 @@ from datetime import datetime
 
 
 from .remote_api import RemoteAPI
-
+from .encryption import Encryption
 
 from .models import * 
 
-api = RemoteAPI()
+api = RemoteAPI() 
+enc = Encryption()
 
 class UserType(DjangoObjectType):
     class Meta:
@@ -330,16 +331,17 @@ class UpdateUserProfile(Mutation):
 
     @staticmethod
     def mutate(_,  info, usr_id,  image, date_of_birth, phone_number, first_name, last_name):
-        usr = UserProfile.objects.get(id=usr_id)      
-        if first_name and last_name is not None:
+        usr = UserProfile.objects.get(id=usr_id)   
+        if first_name and last_name is not None:    
             try:
-                api_cred = ApiCredentials.objects.get(id = usr_id)
+                api_cred = ApiCredentials.objects.get(id = usr_id) 
             except:
+                mainUser = User.objects.get(id=usr_id)
                 res = api.create_user( first_name + " " + last_name )  
                 api_cred = ApiCredentials(
                             user = usr,
-                            remote_id =  res["id"],
-                            secret = res["secret"],
+                            remote_id = enc.aesCbcPbkdf2EncryptToBase64( mainUser.password,  res["id"]),
+                            secret = enc.aesCbcPbkdf2EncryptToBase64( mainUser.password, res["secret"]),
                             created_at = res["created_at"]
                             )
                 api_cred.save()
