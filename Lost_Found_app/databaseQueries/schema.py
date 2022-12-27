@@ -319,6 +319,7 @@ class UpdateUserProfile(Mutation):
     id = ID()   
     date_of_birth = String()
     phone_number = String()
+    api_msg = String()
 
 
     class Arguments: 
@@ -331,20 +332,27 @@ class UpdateUserProfile(Mutation):
 
     @staticmethod
     def mutate(_,  info, usr_id,  image, date_of_birth, phone_number, first_name, last_name):
-        usr = UserProfile.objects.get(id=usr_id)   
+        usr = UserProfile.objects.get(id = usr_id )   
+        apiMsg = "" 
         if first_name and last_name is not None:    
             try:
-                api_cred = ApiCredentials.objects.get(id = usr_id) 
+                api_cred = ApiCredentials.objects.get(user=usr)   
             except:
-                mainUser = User.objects.get(id=usr_id)
-                res = api.create_user( first_name + " " + last_name )  
-                api_cred = ApiCredentials(
-                            user = usr,
-                            remote_id = enc.aesCbcPbkdf2EncryptToBase64( mainUser.password,  res["id"]),
-                            secret = enc.aesCbcPbkdf2EncryptToBase64( mainUser.password, res["secret"]),
-                            created_at = res["created_at"]
-                            )
-                api_cred.save()
+                try:
+                    api_cred = ApiCredentials.objects.get(username = f'{first_name} {last_name}')  
+                    apiMsg = "Api User Name  Credentials already exist"
+                except:
+                    mainUser = User.objects.get(id=usr_id)
+                    res = api.create_user( first_name + " " + last_name )  
+                    api_cred = ApiCredentials(
+                                user = usr,
+                                username = first_name + " " + last_name, 
+                                remote_id = enc.aesCbcPbkdf2EncryptToBase64( mainUser.password,  res["id"]),
+                                secret = enc.aesCbcPbkdf2EncryptToBase64( mainUser.password, res["secret"]),
+                                created_at = res["created_at"]
+                                )
+                    api_cred.save() 
+                    apiMsg = "Api User Created"
              
         if first_name is not None:
             mainUser = User.objects.get(id=usr_id)
@@ -364,7 +372,8 @@ class UpdateUserProfile(Mutation):
         usr.save()
         return UpdateUserProfile(id = usr.id,
                 date_of_birth = usr.date_of_birth,
-                phone_number = usr.phone ) 
+                phone_number = usr.phone, 
+                api_msg = apiMsg ) 
 
 
 

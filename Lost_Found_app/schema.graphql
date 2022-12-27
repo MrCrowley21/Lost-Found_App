@@ -1,0 +1,229 @@
+"""Projects main Query class, this will inherit multiple queries."""
+type Query {
+  users: [UserType]
+  userProfile(id: Int): UserProfileType
+  user(id: Int): UserType
+  me: UserProfileType
+  foundAnnouncements: [AnnouncementType]
+  announcementsSearchByContent(search: String): [AnnouncementType]
+  lostAnnouncements: [AnnouncementType]
+  chats: [ChatSystem]
+  messages: [MessageType]
+  comments: [CommentType]
+  tags: [TagType]
+  announcement(id: Int): AnnouncementType
+  announcementsByTag(annType: String, tag: String): [AnnouncementType]
+}
+
+type UserType {
+  id: ID!
+  lastLogin: DateTime
+  firstName: String!
+  lastName: String!
+
+  """
+  Designates whether this user should be treated as active. Unselect this instead of deleting accounts.
+  """
+  isActive: Boolean!
+  email: String!
+}
+
+"""
+The `DateTime` scalar type represents a DateTime
+value as specified by
+[iso8601](https://en.wikipedia.org/wiki/ISO_8601).
+"""
+scalar DateTime
+
+type UserProfileType {
+  id: ID!
+  user: UserType!
+  phone: String!
+  location: String!
+  creditDetails: String!
+  image: String!
+  dateOfBirth: Date!
+  rating: Int!
+  announcementSet: [AnnouncementType!]!
+  messageSet: [MessageType!]!
+  chatSet: [ChatSystem!]!
+  commentSet: [CommentType!]!
+}
+
+"""
+The `Date` scalar type represents a Date
+value as specified by
+[iso8601](https://en.wikipedia.org/wiki/ISO_8601).
+"""
+scalar Date
+
+type AnnouncementType {
+  id: ID!
+  user: UserProfileType!
+  title: String!
+  location: String!
+  image: String!
+  annType: String!
+  content: String!
+  tags: [TagType!]!
+  reward: Int!
+  passedTime: String!
+}
+
+type TagType {
+  id: ID!
+  name: String!
+}
+
+type MessageType {
+  id: ID!
+  isRead: Boolean!
+  content: String!
+}
+
+type ChatSystem {
+  id: ID!
+  registerDate: DateTime!
+  closeDate: DateTime!
+}
+
+type CommentType {
+  id: ID!
+  content: String!
+}
+
+"""
+Projects main Mutation class, this will 
+inherit multiple mutations.
+"""
+type Mutation {
+  """
+  Create a user mutation.
+  Attributes for the class define the mutation response.
+  """
+  createUser(email: String!, password: String!): CreateUser
+
+  """Obtain JSON Web Token mutation"""
+  login(email: String!, password: String!): ObtainJSONWebToken
+  verifyToken(token: String): Verify
+  refreshToken(token: String): Refresh
+  createNewAnnouncement(annType: String!, content: String!, image: Upload, location: String!, reward: Int, tag: String!, title: String!, userId: Int!): CreateAnnouncement
+  updateAnnouncement(annId: Int!, content: String!, image: Upload, location: String!, reward: Int): UpdateFoundAnnouncement
+  deleteAnnouncement(annId: Int!): DeleteFoundAnnouncement
+  createChat(userId: Int!): CreateChat
+  updateChat(chatId: Int!): UpdateChat
+  createComment(announcementId: Int!, content: String!, userId: Int!): CreateComment
+  editComment(commentId: Int!, content: String!): EditComment
+  deleteComment(commentId: Int!): DeleteComment
+  createMessage(chatId: Int!, content: String!, senderId: Int!): CreateMessage
+  editMessage(content: String!, messageId: Int!): EditMessage
+  deleteMessage(messageId: Int!): DeleteMessage
+  createTags(tagList: [String]!): CreateTags
+  updateUserProfile(dateOfBirth: String, firstName: String, image: Upload, lastName: String, phoneNumber: String, usrId: Int!): UpdateUserProfile
+}
+
+"""
+Create a user mutation.
+Attributes for the class define the mutation response.
+"""
+type CreateUser {
+  id: ID
+}
+
+"""Obtain JSON Web Token mutation"""
+type ObtainJSONWebToken {
+  payload: GenericScalar!
+  refreshExpiresIn: Int!
+  token: String!
+}
+
+"""
+The `GenericScalar` scalar type represents a generic
+GraphQL scalar value that could be:
+String, Boolean, Int, Float, List or Object.
+"""
+scalar GenericScalar
+
+type Verify {
+  payload: GenericScalar!
+}
+
+type Refresh {
+  payload: GenericScalar!
+  refreshExpiresIn: Int!
+  token: String!
+}
+
+type CreateAnnouncement {
+  id: ID
+  announce: AnnouncementType
+}
+
+"""
+Create scalar that ignores normal serialization/deserialization, since
+that will be handled by the multipart request spec
+"""
+scalar Upload
+
+type UpdateFoundAnnouncement {
+  id: ID
+  announce: AnnouncementType
+}
+
+type DeleteFoundAnnouncement {
+  id: ID
+  announce: AnnouncementType
+}
+
+type CreateChat {
+  id: ID
+  chat: ChatSystem
+}
+
+type UpdateChat {
+  id: ID
+  announce: ChatSystem
+}
+
+type CreateComment {
+  id: ID
+  comment: CommentType
+}
+
+type EditComment {
+  id: ID
+  content: String
+  comment: CommentType
+}
+
+type DeleteComment {
+  msg: String
+  comment: CommentType
+}
+
+type CreateMessage {
+  id: ID
+  message: MessageType
+}
+
+type EditMessage {
+  content: String
+  message: MessageType
+}
+
+type DeleteMessage {
+  msg: String
+  message: MessageType
+}
+
+type CreateTags {
+  msg: String
+  tag: TagType
+}
+
+type UpdateUserProfile {
+  id: ID
+  dateOfBirth: String
+  phoneNumber: String
+  apiMsg: String
+}
