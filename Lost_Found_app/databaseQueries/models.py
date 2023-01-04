@@ -74,11 +74,7 @@ class ApiCredentials(models.Model):
     secret = models.CharField(max_length = 1000, blank=True)
     created_at = models.CharField(max_length=20, blank=True) 
     username = models.CharField(max_length=70, blank=True)
-# @receiver(post_save, sender=User)
-# def save_user_profile(sender, instance, first_name=None, last_name=None, **kwargs):
-#     instance.first_name = first_name 
-#     instance.last_name = last_name
-#     instance.userprofile.save()
+
 
 
 

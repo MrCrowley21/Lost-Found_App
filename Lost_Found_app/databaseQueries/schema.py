@@ -59,7 +59,6 @@ class ChatSystem(DjangoObjectType):
     class Meta:
         model = Chat
         fields = (
-            #'user_id', 
             'register_date',   
             'id', 
             'close_date'
@@ -108,7 +107,7 @@ class Query(object):
     """
     users = List(UserType)
     user = Field(UserType, id=Int()) 
-    user_profile = Field(UserProfileType, id = Int())
+    user_profile = Field(UserProfileType, id = Int()) 
     user = Field(UserType, id=Int())
     me = Field(UserProfileType) 
 
@@ -131,12 +130,6 @@ class Query(object):
         """
         return User.objects.all() 
 
-    def resolve_user_profiles(self, info, **kwargs):
-        """
-        Resolves all users.
-        """
-        return UserProfile.objects.all()
-
     @staticmethod
     def resolve_user(self, info, **kwargs):
         """
@@ -145,8 +138,9 @@ class Query(object):
         return User.objects.get(**kwargs) 
 
     @staticmethod
-    def resolve_user_profile(self, info, **kwargs):
-        return UserProfile.objects.get(**kwargs)
+    def resolve_user_profile(self, info, id):
+        return UserProfile.objects.get(user_id = id)
+
 
     @staticmethod
     def resolve_me(self, info):
@@ -251,13 +245,13 @@ class CreateAnnouncement(Mutation):
         annType = String(required=True) 
         tag = String(required=True)
 
-    announce = Field(AnnouncementType) 
+    #announce = Field(AnnouncementType) 
     @staticmethod
     def mutate(_, info,title, image,  user_id,  location,  content, reward, annType,tag):
         announce = Announcement(   
             title =  title,
             image = image, 
-            user =  UserProfile.objects.get(id = user_id), 
+            user =  UserProfile.objects.get(user_id = user_id), 
             location =  location,
             content =  content, 
             annType = annType.upper(), 
@@ -281,7 +275,7 @@ class DeleteFoundAnnouncement(Mutation):
     class Arguments: 
         ann_id = Int(required=True)
 
-    announce = Field(AnnouncementType) 
+    #announce = Field(AnnouncementType) 
     @staticmethod
     def mutate(_, info,  ann_id):
         Announcement.objects.get(id = ann_id ).delete()  
@@ -301,7 +295,7 @@ class UpdateFoundAnnouncement(Mutation):
         reward = Int(required=False)
 
 
-    announce = Field(AnnouncementType)
+    #announce = Field(AnnouncementType)
     @staticmethod
     def mutate(_,  info, ann_id, location, image, content, reward):
         announce = Announcement.objects.get(id=ann_id)  
@@ -332,7 +326,7 @@ class UpdateUserProfile(Mutation):
 
     @staticmethod
     def mutate(_,  info, usr_id,  image, date_of_birth, phone_number, first_name, last_name):
-        usr = UserProfile.objects.get(id = usr_id )   
+        usr = UserProfile.objects.get(user_id = usr_id )   
         apiMsg = "" 
         if first_name and last_name is not None:    
             try:
@@ -387,7 +381,7 @@ class CreateChat(Mutation):
     @staticmethod
     def mutate(_, info, user_id): 
         chat = Chat(
-            user_id=UserProfile.objects.get(id=user_id), 
+            user_id=UserProfile.objects.get(user_id=user_id), 
             # register_date = datetime.now() 
             )  
         chat.save() 
@@ -402,7 +396,7 @@ class UpdateChat(Mutation):
     class Arguments:
         chat_id = Int(required=True)
 
-    announce = Field(ChatSystem)
+    #announce = Field(ChatSystem)
     @staticmethod
     def mutate(_,  info, chat_id):
         chat = Chat.objects.get(id=chat_id)
@@ -427,7 +421,7 @@ class CreateComment(Mutation):
     @staticmethod
     def mutate(_, info, announcement_id, content,user_id ):
         comment = Comment(   
-            user_id  =  UserProfile.objects.get(id=user_id),  
+            user_id  =  UserProfile.objects.get(user_id=user_id),  
             content =  content,  
             announcement_id = Announcement.objects.get( id = announcement_id)  )
         comment.save()   
@@ -479,7 +473,7 @@ class CreateMessage(Mutation):
     @staticmethod
     def mutate(_, info, chat_id, content,sender_id ):
         message = Message(   
-            sender_id  =   UserProfile.objects.get(id=sender_id),   
+            sender_id  =   UserProfile.objects.get(user_id=sender_id),   
             content =  content, 
             chat_id = Chat.objects.get( id = chat_id), 
             registered_time = datetime.now(),

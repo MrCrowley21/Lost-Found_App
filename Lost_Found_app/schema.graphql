@@ -156,7 +156,6 @@ type Refresh {
 
 type CreateAnnouncement {
   id: ID
-  announce: AnnouncementType
 }
 
 """
@@ -167,12 +166,10 @@ scalar Upload
 
 type UpdateFoundAnnouncement {
   id: ID
-  announce: AnnouncementType
 }
 
 type DeleteFoundAnnouncement {
   id: ID
-  announce: AnnouncementType
 }
 
 type CreateChat {
@@ -182,7 +179,6 @@ type CreateChat {
 
 type UpdateChat {
   id: ID
-  announce: ChatSystem
 }
 
 type CreateComment {
