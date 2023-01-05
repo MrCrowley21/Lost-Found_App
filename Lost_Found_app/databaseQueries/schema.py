@@ -233,7 +233,8 @@ class CreateUser(Mutation):
         return CreateUser( id=user.id ) 
 
 class CreateAnnouncement(Mutation):
-    id = ID()
+    id = ID() 
+    
 
     class Arguments: 
         title = String(required=True)
@@ -364,7 +365,7 @@ class UpdateUserProfile(Mutation):
             usr.phone = phone_number 
         
         usr.save()
-        return UpdateUserProfile(id = usr.id,
+        return UpdateUserProfile(id = usr.user_id,
                 date_of_birth = usr.date_of_birth,
                 phone_number = usr.phone, 
                 api_msg = apiMsg ) 
