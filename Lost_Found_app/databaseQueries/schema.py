@@ -20,23 +20,20 @@ class UserType(DjangoObjectType):
         model = User
         fields = (
             'id',
-            'last_login',
             'email', 
             'first_name',
             'last_name', 
-            'is_active'
         ) 
 class UserProfileType(DjangoObjectType):
     class Meta:
         model = UserProfile 
-        ( 
-            'user',
+        (   'user', 
+            'location',
             'image', 
             'phone',
-            'date_of_birth'
-
-        )
-
+            'date_of_birth', 
+            'rating'
+        ) 
 
 class AnnouncementType(DjangoObjectType):
     class Meta:
@@ -44,8 +41,9 @@ class AnnouncementType(DjangoObjectType):
         fields = ( 
             'id',
             'title',
-            'user',
-            'location',
+            'user_profile',
+            'street_name',
+            'coordonates', 
             'image',
             'content',
             'reward', 
@@ -55,41 +53,43 @@ class AnnouncementType(DjangoObjectType):
         )
 
 
-class ChatSystem(DjangoObjectType):
-    class Meta:
-        model = Chat
-        fields = (
-            'register_date',   
-            'id', 
-            'close_date'
-        )
+############################### STILL NOT
+
+# class ChatSystem(DjangoObjectType):
+#     class Meta:
+#         model = Chat
+#         fields = (
+#             'register_date',   
+#             'id', 
+#             'close_date'
+#         )
 
 
-class MessageType(DjangoObjectType):
-    class Meta:
-        model = Message
-        fields = (
-            #'sender_id',
-            #'chat_id', 
-            'id',
-            'registered_date',
-            'edited_date',
-            'is_read',
-            'content'
-        )
+# class MessageType(DjangoObjectType):
+#     class Meta:
+#         model = Message
+#         fields = (
+#             #'sender_id',
+#             #'chat_id', 
+#             'id',
+#             'registered_date',
+#             'edited_date',
+#             'is_read',
+#             'content'
+#         )
 
 
-class CommentType(DjangoObjectType):
-    class Meta:
-        model = Comment
-        fields = (
-            #'user_id', 
-            'id', 
-            #'announcement_id',
-            'registered_date',
-            'edited_date',
-            'content'
-        )
+# class CommentType(DjangoObjectType):
+#     class Meta:
+#         model = Comment
+#         fields = (
+#             #'user_id', 
+#             'id', 
+#             #'announcement_id',
+#             'registered_date',
+#             'edited_date',
+#             'content'
+#         )
 
 
 class TagType(DjangoObjectType):
@@ -108,33 +108,27 @@ class Query(object):
     users = List(UserType)
     user = Field(UserType, id=Int()) 
     user_profile = Field(UserProfileType, id = Int()) 
-    user = Field(UserType, id=Int())
     me = Field(UserProfileType) 
+    
+    announcement = Field(AnnouncementType, id=Int()) 
+    found_announcements = List(AnnouncementType)  
+    lost_announcements = List(AnnouncementType) 
+    announcements_search_by_content = List(AnnouncementType, search=String())  
+    announcements_by_tag = List(AnnouncementType,annType = String(),  tag = String()) 
 
-    found_announcements = List(AnnouncementType) 
-    announcements_search_by_content = List(AnnouncementType, search=String())
-    lost_announcements = List(AnnouncementType)
-    chats = List(ChatSystem)
-    messages = List(MessageType)
-    comments = List(CommentType)
-    tags = List(TagType)  
+    tags = List(TagType) 
 
-    announcement = Field(AnnouncementType, id=Int())  
+    # chats = List(ChatSystem)
+    # messages = List(MessageType)
+    # comments = List(CommentType) 
 
-    announcements_by_tag = List(AnnouncementType,annType = String(),  tag = String())
 
     @staticmethod
     def resolve_users(self, info, **kwargs):
-        """
-        Resolves all users.
-        """
         return User.objects.all() 
 
     @staticmethod
     def resolve_user(self, info, **kwargs):
-        """
-        Resolves a single user by ID.
-        """
         return User.objects.get(**kwargs) 
 
     @staticmethod
@@ -144,9 +138,6 @@ class Query(object):
 
     @staticmethod
     def resolve_me(self, info):
-        """
-        Resolves the logged in user
-        """
         user = info.context.user 
         if user.is_anonymous:
             raise Exception('You are not logged in')
@@ -156,10 +147,8 @@ class Query(object):
     def resolve_announcement(self, info, **kwargs):  
         obj = Announcement.objects.get(**kwargs) 
         obj.updateTimePassed()
-        """
-        Resolves a single Annoucnemnt
-        """  
-        return Announcement.objects.get(**kwargs)
+        obj.save()
+        return obj 
 
 
     @staticmethod
@@ -194,66 +183,63 @@ class Query(object):
     def resolve_tags(self, info):
         return Tag.objects.all()
 
-    @staticmethod
-    def resolve_chats(self, info):
-        return Chat.objects.all()
+    # @staticmethod
+    # def resolve_chats(self, info):
+    #     return Chat.objects.all()
 
-    @staticmethod
-    def resolve_messages(self, info):
-        return Message.objects.all()
+    # @staticmethod
+    # def resolve_messages(self, info):
+    #     return Message.objects.all()
 
-    @staticmethod
-    def resolve_comments(self, info):
-        return Comment.objects.all()
+    # @staticmethod
+    # def resolve_comments(self, info):
+    #     return Comment.objects.all()
 
 
 class CreateUser(Mutation):
-    """
-    Create a user mutation.
-    Attributes for the class define the mutation response.
-    """
     id = ID()
 
     class Arguments:
-        """
-        Input arguments to create a user.
-        """
         email = String(required=True)
         password = String(required=True)
 
     @staticmethod
     def mutate(_, info, email, password):
-        """
-        Use the create_user method and return the
-        attributes we specified.
-        """
         user = User.objects.create_user(email=email,
                                         password=password,
                                         )
-        return CreateUser( id=user.id ) 
+        return CreateUser( id=user.id )  
+
+
+        
 
 class CreateAnnouncement(Mutation):
-    id = ID() 
-    
-
+    id = ID()  
+    msg = String()
     class Arguments: 
         title = String(required=True)
-        user_id = Int(required=True)
-        location = String(required=True)
+        street_name = String(required=True) 
+        coordonates = String(required=True)
         image = Upload(required=False)
         content = String(required=True)  
         reward = Int(required=False) 
         annType = String(required=True) 
         tag = String(required=True)
 
-    #announce = Field(AnnouncementType) 
     @staticmethod
-    def mutate(_, info,title, image,  user_id,  location,  content, reward, annType,tag):
+    def mutate(_, info,title, image, street_name, coordonates,  content, reward, annType,tag): 
+        user = info.context.user  
+        if user.is_authenticated == False: 
+              return CreateAnnouncement( 
+            id = None,  
+            msg = "You are not logged in in order to create the post!"
+        ) 
         announce = Announcement(   
             title =  title,
             image = image, 
-            user =  UserProfile.objects.get(user_id = user_id), 
-            location =  location,
+            user_profile =  UserProfile.objects.get(user = user), 
+            street_name = street_name,
+            coordonates = coordonates,
             content =  content, 
             annType = annType.upper(), 
             reward = reward, 
@@ -267,58 +253,72 @@ class CreateAnnouncement(Mutation):
             tagObj.save()
         announce.tags.add(tagObj)
         return CreateAnnouncement( 
-            id = announce.id
+            id = announce.id,
+            msg = "Succesful"
         ) 
 
 
-class DeleteFoundAnnouncement(Mutation):
+class DeleteAnnouncement(Mutation):
     id = ID()
     class Arguments: 
         ann_id = Int(required=True)
-
-    #announce = Field(AnnouncementType) 
     @staticmethod
     def mutate(_, info,  ann_id):
         Announcement.objects.get(id = ann_id ).delete()  
-        return DeleteFoundAnnouncement( 
+        return DeleteAnnouncement( 
             id = ann_id
         )
 
 
-class UpdateFoundAnnouncement(Mutation): 
-    id = ID() 
-
+class UpdateAnnouncement(Mutation): 
+    id = ID()  
+    msg = String()
     class Arguments: 
         ann_id = Int(required=True )
-        location = String(required=True)
+        street_name = String(required=False) 
+        coordonates = String(required=False)
         image = Upload(required=False)
         content = String(required=True)  
-        reward = Int(required=False)
+        reward = Int(required=False) 
+        title = String(required=False)
 
 
-    #announce = Field(AnnouncementType)
     @staticmethod
-    def mutate(_,  info, ann_id, location, image, content, reward):
+    def mutate(_,  info, ann_id, title, street_name, coordonates, image, content, reward): 
+        user = info.context.user  
+        if user.is_authenticated == False:
+            return CreateAnnouncement( 
+            id = None,  
+            msg = "You are not logged in in order to create the post!")
+
         announce = Announcement.objects.get(id=ann_id)  
-        announce.location = location 
         if image is not None:
             announce.image = image
         announce.content = content  
         if reward is not None:
-            announce.reward = reward
+            announce.reward = reward 
+        if street_name is not None:
+            announce.street_name = street_name 
+        if coordonates is not None:
+            announce.coordonates = coordonates 
+        if content is not None:
+            announce.content = content 
+        if reward is not None:
+            announce.reward = reward 
+        if title is not None:
+            announce.title = title
         announce.save()
-        return UpdateFoundAnnouncement( id = announce.id )  
+        return UpdateAnnouncement( id = announce.id, msg= "Succesful" )  
+
+
+
 
 
 class UpdateUserProfile(Mutation): 
-    id = ID()   
-    date_of_birth = String()
-    phone_number = String()
-    api_msg = String()
-
+    api_msg = String() 
+    msg = String()
 
     class Arguments: 
-        usr_id = Int(required=True )
         image = Upload(required=False)
         date_of_birth = String(required=False) 
         phone_number = String(required = False)
@@ -326,192 +326,195 @@ class UpdateUserProfile(Mutation):
         last_name = String(required = False)
 
     @staticmethod
-    def mutate(_,  info, usr_id,  image, date_of_birth, phone_number, first_name, last_name):
-        usr = UserProfile.objects.get(user_id = usr_id )   
-        apiMsg = "" 
+    def mutate(_,  info, image, date_of_birth, phone_number, first_name, last_name): 
+        user = info.context.user  
+        if user.is_authenticated == False:
+            return UpdateUserProfile( 
+            api_msg = None, 
+            msg = "You are not logged in in order to update user profile!")      
+
+
+        usr_prof = UserProfile.objects.get(user=user)   
+        apiMsg = None 
         if first_name and last_name is not None:    
             try:
-                api_cred = ApiCredentials.objects.get(user=usr)   
+                api_cred = ApiCredentials.objects.get(user_profile=usr_prof)   
             except:
                 try:
                     api_cred = ApiCredentials.objects.get(username = f'{first_name} {last_name}')  
                     apiMsg = "Api User Name  Credentials already exist"
                 except:
-                    mainUser = User.objects.get(id=usr_id)
                     res = api.create_user( first_name + " " + last_name )  
                     api_cred = ApiCredentials(
-                                user = usr,
+                                user_profile = usr_prof,
                                 username = first_name + " " + last_name, 
-                                remote_id = enc.aesCbcPbkdf2EncryptToBase64( mainUser.password,  res["id"]),
-                                secret = enc.aesCbcPbkdf2EncryptToBase64( mainUser.password, res["secret"]),
+                                remote_id = enc.aesCbcPbkdf2EncryptToBase64( user.password,  res["id"]),
+                                secret = enc.aesCbcPbkdf2EncryptToBase64( user.password, res["secret"]),
                                 created_at = res["created_at"]
                                 )
                     api_cred.save() 
                     apiMsg = "Api User Created"
              
         if first_name is not None:
-            mainUser = User.objects.get(id=usr_id)
-            mainUser.first_name = first_name
-            mainUser.save() 
+            user.first_name = first_name
         if last_name is not None:
-            mainUser = User.objects.get(id=usr_id)
-            mainUser.last_name = last_name
-            mainUser.save() 
+            user.last_name = last_name
         if image is not None:
-            usr.image = image
+            usr_prof.image = image
         if date_of_birth is not None:
-            usr.date_of_birth = date_of_birth 
+            usr_prof.date_of_birth = date_of_birth 
         if phone_number is not None:
-            usr.phone = phone_number 
+            usr_prof.phone = phone_number 
         
-        usr.save()
-        return UpdateUserProfile(id = usr.user_id,
-                date_of_birth = usr.date_of_birth,
-                phone_number = usr.phone, 
+        usr_prof.save() 
+        user.save() 
+
+        return UpdateUserProfile(
+                msg = "Succesful", 
                 api_msg = apiMsg ) 
 
 
 
-class CreateChat(Mutation):
-    id = ID()
+# class CreateChat(Mutation):
+#     id = ID()
 
-    class Arguments:
-        user_id = Int(required=True)
+#     class Arguments:
+#         user_id = Int(required=True)
 
-    chat = Field(ChatSystem)
-    @staticmethod
-    def mutate(_, info, user_id): 
-        chat = Chat(
-            user_id=UserProfile.objects.get(user_id=user_id), 
-            # register_date = datetime.now() 
-            )  
-        chat.save() 
-        return CreateChat(
-            id=chat.id
-        )
+#     chat = Field(ChatSystem)
+#     @staticmethod
+#     def mutate(_, info, user_id): 
+#         chat = Chat(
+#             user_id=UserProfile.objects.get(user_id=user_id), 
+#             # register_date = datetime.now() 
+#             )  
+#         chat.save() 
+#         return CreateChat(
+#             id=chat.id
+#         )
 
 
-class UpdateChat(Mutation):
-    id = ID()
+# class UpdateChat(Mutation):
+#     id = ID()
 
-    class Arguments:
-        chat_id = Int(required=True)
+#     class Arguments:
+#         chat_id = Int(required=True)
 
-    #announce = Field(ChatSystem)
-    @staticmethod
-    def mutate(_,  info, chat_id):
-        chat = Chat.objects.get(id=chat_id)
-        chat.close_date = datetime.now() 
-        chat.save()
-        return UpdateChat(id=chat.id) 
+#     #announce = Field(ChatSystem)
+#     @staticmethod
+#     def mutate(_,  info, chat_id):
+#         chat = Chat.objects.get(id=chat_id)
+#         chat.close_date = datetime.now() 
+#         chat.save()
+#         return UpdateChat(id=chat.id) 
 
 
 
 
 
 ##################### COMMENTS ########################################################   
-class CreateComment(Mutation):
-    id = ID()
+# class CreateComment(Mutation):
+#     id = ID()
 
-    class Arguments: 
-        announcement_id = Int(required=True) 
-        user_id =  Int(required=True)
-        content = String(required=True)
+#     class Arguments: 
+#         announcement_id = Int(required=True) 
+#         user_id =  Int(required=True)
+#         content = String(required=True)
 
-    comment = Field(CommentType) 
-    @staticmethod
-    def mutate(_, info, announcement_id, content,user_id ):
-        comment = Comment(   
-            user_id  =  UserProfile.objects.get(user_id=user_id),  
-            content =  content,  
-            announcement_id = Announcement.objects.get( id = announcement_id)  )
-        comment.save()   
-        return CreateComment( 
-            id = comment.id
-        )  
+#     comment = Field(CommentType) 
+#     @staticmethod
+#     def mutate(_, info, announcement_id, content,user_id ):
+#         comment = Comment(   
+#             user_id  =  UserProfile.objects.get(user_id=user_id),  
+#             content =  content,  
+#             announcement_id = Announcement.objects.get( id = announcement_id)  )
+#         comment.save()   
+#         return CreateComment( 
+#             id = comment.id
+#         )  
 
-class EditComment(Mutation): 
-    id = ID()
-    content = String()
+# class EditComment(Mutation): 
+#     id = ID()
+#     content = String()
 
-    class Arguments:  
-        comment_id = Int(required=True)
-        content = String(required=True)
+#     class Arguments:  
+#         comment_id = Int(required=True)
+#         content = String(required=True)
 
-    comment = Field(CommentType) 
-    @staticmethod
-    def mutate(_, info, comment_id, content ): 
-        comment = Comment.objects.get(id = comment_id )
-        comment.content = content 
-        comment.edited_time = datetime.now()
-        comment.save()   
-        return EditComment(  
-            id = comment.id, 
-            content = comment.content
-        ) 
+#     comment = Field(CommentType) 
+#     @staticmethod
+#     def mutate(_, info, comment_id, content ): 
+#         comment = Comment.objects.get(id = comment_id )
+#         comment.content = content 
+#         comment.edited_time = datetime.now()
+#         comment.save()   
+#         return EditComment(  
+#             id = comment.id, 
+#             content = comment.content
+#         ) 
 
-class DeleteComment(Mutation):
-    msg  = String()
-    class Arguments:  
-        comment_id = Int(required=True)
-    comment = Field(CommentType) 
-    @staticmethod
-    def mutate(_, info, comment_id): 
-        comment = Comment.objects.get(id = comment_id ).delete()
-        return DeleteComment( 
-            msg = "Comment Deleted succesfully"
-        )
+# class DeleteComment(Mutation):
+#     msg  = String()
+#     class Arguments:  
+#         comment_id = Int(required=True)
+#     comment = Field(CommentType) 
+#     @staticmethod
+#     def mutate(_, info, comment_id): 
+#         comment = Comment.objects.get(id = comment_id ).delete()
+#         return DeleteComment( 
+#             msg = "Comment Deleted succesfully"
+#         )
 
-############################# Message ###############################################   
-class CreateMessage(Mutation):
-    id = ID()
-    class Arguments: 
-        chat_id = Int(required=True) 
-        sender_id = Int(required=True)
-        content = String(required=True) 
+# ############################# Message ###############################################   
+# class CreateMessage(Mutation):
+#     id = ID()
+#     class Arguments: 
+#         chat_id = Int(required=True) 
+#         sender_id = Int(required=True)
+#         content = String(required=True) 
 
-    message = Field(MessageType) 
-    @staticmethod
-    def mutate(_, info, chat_id, content,sender_id ):
-        message = Message(   
-            sender_id  =   UserProfile.objects.get(user_id=sender_id),   
-            content =  content, 
-            chat_id = Chat.objects.get( id = chat_id), 
-            registered_time = datetime.now(),
-             )
-        message.save()   
-        return CreateMessage( 
-            id = message.id
-        )  
+#     message = Field(MessageType) 
+#     @staticmethod
+#     def mutate(_, info, chat_id, content,sender_id ):
+#         message = Message(   
+#             sender_id  =   UserProfile.objects.get(user_id=sender_id),   
+#             content =  content, 
+#             chat_id = Chat.objects.get( id = chat_id), 
+#             registered_time = datetime.now(),
+#              )
+#         message.save()   
+#         return CreateMessage( 
+#             id = message.id
+#         )  
 
-class EditMessage(Mutation):
-    content = String()
-    class Arguments:  
-        message_id = Int(required=True)
-        content = String(required=True)
+# class EditMessage(Mutation):
+#     content = String()
+#     class Arguments:  
+#         message_id = Int(required=True)
+#         content = String(required=True)
 
-    message = Field(MessageType) 
-    @staticmethod
-    def mutate(_, info, message_id, content ): 
-        message = Message.objects.get(id = message_id )
-        message.content = content 
-        message.edited_time = datetime.now()
-        message.save()   
-        return EditMessage( 
-            content = message.content
-        )  
+#     message = Field(MessageType) 
+#     @staticmethod
+#     def mutate(_, info, message_id, content ): 
+#         message = Message.objects.get(id = message_id )
+#         message.content = content 
+#         message.edited_time = datetime.now()
+#         message.save()   
+#         return EditMessage( 
+#             content = message.content
+#         )  
 
-class DeleteMessage(Mutation):
-    msg  = String()
-    class Arguments:  
-        message_id = Int(required=True)
-    message = Field(MessageType) 
-    @staticmethod
-    def mutate(_, info, message_id): 
-        message = Message.objects.get(id = message_id ).delete()
-        return DeleteMessage( 
-            msg = "Message Deleted succesfully"
-        )
+# class DeleteMessage(Mutation):
+#     msg  = String()
+#     class Arguments:  
+#         message_id = Int(required=True)
+#     message = Field(MessageType) 
+#     @staticmethod
+#     def mutate(_, info, message_id): 
+#         message = Message.objects.get(id = message_id ).delete()
+#         return DeleteMessage( 
+#             msg = "Message Deleted succesfully"
+#         )
 
         
 class CreateTags(Mutation):
@@ -545,41 +548,45 @@ class Mutation(ObjectType):
     create_user = CreateUser.Field()
     login = graphql_jwt.ObtainJSONWebToken.Field()
     verify_token = graphql_jwt.Verify.Field()
-    refresh_token = graphql_jwt.Refresh.Field() 
+    refresh_token = graphql_jwt.Refresh.Field()  
+    
+    """
+    User Profiles
+    """
+    
+    update_user_profile = UpdateUserProfile.Field()
 
     """
     Mutations for Creating and Updating Announcement
     """ 
     create_new_announcement = CreateAnnouncement.Field() 
-    update_announcement = UpdateFoundAnnouncement.Field() 
-    delete_announcement = DeleteFoundAnnouncement.Field() 
+    update_announcement = UpdateAnnouncement.Field() 
+    delete_announcement = DeleteAnnouncement.Field() 
 
     """ 
      Mutations for Creating and Updating Chat 
     """ 
 
-    create_chat = CreateChat.Field() 
-    update_chat = UpdateChat.Field()  
+    # create_chat = CreateChat.Field() 
+    # update_chat = UpdateChat.Field()  
 
     """
     Mutations for Creating and Updating Comments
     """ 
-    create_comment = CreateComment.Field() 
-    edit_comment = EditComment.Field() 
-    delete_comment = DeleteComment.Field()  
+    # create_comment = CreateComment.Field() 
+    # edit_comment = EditComment.Field() 
+    # delete_comment = DeleteComment.Field()  
     """
     Mutations for Creating and Updating Message 
     """   
-    create_message = CreateMessage.Field() 
-    edit_message = EditMessage.Field() 
-    delete_message = DeleteMessage.Field()  
+    # create_message = CreateMessage.Field() 
+    # edit_message = EditMessage.Field() 
+    # delete_message = DeleteMessage.Field()  
 
     """
     Mutation Tags 
     """ 
     create_tags = CreateTags.Field() 
-
-    update_user_profile = UpdateUserProfile.Field()
 
 
 

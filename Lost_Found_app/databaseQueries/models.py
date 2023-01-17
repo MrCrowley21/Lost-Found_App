@@ -57,10 +57,8 @@ class UserProfile(models.Model):
     location = models.CharField(max_length=10, blank=True)
     credit_details = models.CharField(max_length=16, blank=True) 
     image = models.ImageField(upload_to='IMG/', blank=True)  
-    date_of_birth = models.DateField(blank = True)
+    date_of_birth = models.DateField(blank = True,default=None)
     rating = models.PositiveIntegerField(blank=True)   
-
-
 
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
@@ -69,7 +67,7 @@ def create_user_profile(sender, instance, created, **kwargs):
 
 
 class ApiCredentials(models.Model): 
-    user = models.ForeignKey('UserProfile', on_delete=models.CASCADE) 
+    user_profile = models.ForeignKey('UserProfile', on_delete=models.CASCADE) 
     remote_id = models.CharField( max_length = 1000, blank=True)
     secret = models.CharField(max_length = 1000, blank=True)
     created_at = models.CharField(max_length=20, blank=True) 
@@ -79,10 +77,10 @@ class ApiCredentials(models.Model):
 
 
 class Announcement(models.Model):
-    #announcement_id = models.ObjectIdField(primary_key=True)
-    user = models.ForeignKey('UserProfile', on_delete=models.PROTECT)  
-    title = models.CharField(max_length=50, blank=False )
-    location = models.URLField(max_length=250) 
+    user_profile = models.ForeignKey('UserProfile', on_delete=models.PROTECT)  
+    title = models.CharField(max_length=70, blank=False ) 
+    street_name =  models.CharField(max_length=100) 
+    coordonates =  models.CharField(max_length=100) 
     # IMG STORAGE PATH 
     image = models.ImageField(upload_to='IMGS/', blank=True) 
     annType = models.CharField(max_length=5, blank=False )
@@ -167,7 +165,6 @@ class Announcement(models.Model):
 
 
 class Message(models.Model):
-    #message_id = models.ObjectIdField(primary_key=True)
     sender_id = models.ForeignKey('UserProfile', on_delete=models.PROTECT)
     chat_id = models.ForeignKey('Chat', on_delete=models.PROTECT)
     registered_time = models.DateTimeField(default=datetime.now)
@@ -177,14 +174,12 @@ class Message(models.Model):
 
 
 class Chat(models.Model):
-    #chat_id = models.ObjectIdField(primary_key=True)
     user_id = models.ForeignKey('UserProfile', on_delete=models.PROTECT)
     register_date = models.DateTimeField(default=datetime.now, blank=True) 
     close_date = models.DateTimeField()  
 
     
 class Comment(models.Model):
-   # comment_id = models.ObjectIdField(primary_key=True) 
     announcement_id = models.ForeignKey('Comment', on_delete=models.PROTECT)
     user_id = models.ForeignKey('UserProfile', on_delete=models.PROTECT)
     registered_time = models.DateTimeField(default=datetime.now, blank=True)
@@ -193,6 +188,6 @@ class Comment(models.Model):
 
 
 class Tag(models.Model):
-    name = models.CharField(max_length=10, blank=False,  unique=True)
+    name = models.CharField(max_length=20, blank=False,  unique=True)
 
 
