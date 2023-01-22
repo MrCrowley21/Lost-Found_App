@@ -58,7 +58,7 @@ class UserProfile(models.Model):
     credit_details = models.CharField(max_length=16, blank=True) 
     image = models.ImageField(upload_to='IMG/', blank=True)  
     date_of_birth = models.DateField(blank = True,default=None)
-    rating = models.PositiveIntegerField(blank=True)   
+    rating = models.PositiveIntegerField(blank=True,default=0)   
 
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):

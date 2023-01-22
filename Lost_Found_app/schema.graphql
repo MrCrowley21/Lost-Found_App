@@ -1,39 +1,97 @@
-"""Projects main Query class, this will inherit multiple queries."""
+schema {
+  query: Query
+  mutation: Mutation
+}
+
+type AnnouncementType {
+  id: ID!
+  userProfile: UserProfileType!
+  title: String!
+  streetName: String!
+  coordonates: String!
+  image: String!
+  annType: String!
+  content: String!
+  tags: [TagType!]!
+  reward: Int!
+  passedTime: String!
+}
+
+type CreateAnnouncement {
+  id: ID
+  msg: String
+}
+
+type CreateTags {
+  msg: String
+  tag: TagType
+}
+
+type CreateUser {
+  id: ID
+}
+
+scalar Date
+
+type DeleteAnnouncement {
+  id: ID
+}
+
+scalar GenericScalar
+
+type Mutation {
+  createUser(email: String!, password: String!): CreateUser
+  login(email: String!, password: String!): ObtainJSONWebToken
+  verifyToken(token: String): Verify
+  refreshToken(token: String): Refresh
+  updateUserProfile(dateOfBirth: String, firstName: String, image: Upload, lastName: String, phoneNumber: String): UpdateUserProfile
+  createNewAnnouncement(annType: String!, content: String!, coordonates: String!, image: Upload, reward: Int, streetName: String!, tag: String!, title: String!): CreateAnnouncement
+  updateAnnouncement(annId: Int!, content: String!, coordonates: String, image: Upload, reward: Int, streetName: String, title: String): UpdateAnnouncement
+  deleteAnnouncement(annId: Int!): DeleteAnnouncement
+  createTags(tagList: [String]!): CreateTags
+}
+
+type ObtainJSONWebToken {
+  payload: GenericScalar!
+  refreshExpiresIn: Int!
+  token: String!
+}
+
 type Query {
   users: [UserType]
-  userProfile(id: Int): UserProfileType
   user(id: Int): UserType
+  userProfile(id: Int): UserProfileType
   me: UserProfileType
-  foundAnnouncements: [AnnouncementType]
-  announcementsSearchByContent(search: String): [AnnouncementType]
-  lostAnnouncements: [AnnouncementType]
-  chats: [ChatSystem]
-  messages: [MessageType]
-  comments: [CommentType]
-  tags: [TagType]
   announcement(id: Int): AnnouncementType
+  foundAnnouncements: [AnnouncementType]
+  lostAnnouncements: [AnnouncementType]
+  announcementsSearchByContent(search: String): [AnnouncementType]
   announcementsByTag(annType: String, tag: String): [AnnouncementType]
+  tags: [TagType]
 }
 
-type UserType {
+type Refresh {
+  payload: GenericScalar!
+  refreshExpiresIn: Int!
+  token: String!
+}
+
+type TagType {
   id: ID!
-  lastLogin: DateTime
-  firstName: String!
-  lastName: String!
-
-  """
-  Designates whether this user should be treated as active. Unselect this instead of deleting accounts.
-  """
-  isActive: Boolean!
-  email: String!
+  name: String!
 }
 
-"""
-The `DateTime` scalar type represents a DateTime
-value as specified by
-[iso8601](https://en.wikipedia.org/wiki/ISO_8601).
-"""
-scalar DateTime
+type UpdateAnnouncement {
+  id: ID
+  msg: String
+}
+
+type UpdateUserProfile {
+  apiMsg: String
+  msg: String
+}
+
+scalar Upload
 
 type UserProfileType {
   id: ID!
@@ -45,181 +103,15 @@ type UserProfileType {
   dateOfBirth: Date!
   rating: Int!
   announcementSet: [AnnouncementType!]!
-  messageSet: [MessageType!]!
-  chatSet: [ChatSystem!]!
-  commentSet: [CommentType!]!
 }
 
-"""
-The `Date` scalar type represents a Date
-value as specified by
-[iso8601](https://en.wikipedia.org/wiki/ISO_8601).
-"""
-scalar Date
-
-type AnnouncementType {
+type UserType {
   id: ID!
-  user: UserProfileType!
-  title: String!
-  location: String!
-  image: String!
-  annType: String!
-  content: String!
-  tags: [TagType!]!
-  reward: Int!
-  passedTime: String!
+  firstName: String!
+  lastName: String!
+  email: String!
 }
-
-type TagType {
-  id: ID!
-  name: String!
-}
-
-type MessageType {
-  id: ID!
-  isRead: Boolean!
-  content: String!
-}
-
-type ChatSystem {
-  id: ID!
-  registerDate: DateTime!
-  closeDate: DateTime!
-}
-
-type CommentType {
-  id: ID!
-  content: String!
-}
-
-"""
-Projects main Mutation class, this will 
-inherit multiple mutations.
-"""
-type Mutation {
-  """
-  Create a user mutation.
-  Attributes for the class define the mutation response.
-  """
-  createUser(email: String!, password: String!): CreateUser
-
-  """Obtain JSON Web Token mutation"""
-  login(email: String!, password: String!): ObtainJSONWebToken
-  verifyToken(token: String): Verify
-  refreshToken(token: String): Refresh
-  createNewAnnouncement(annType: String!, content: String!, image: Upload, location: String!, reward: Int, tag: String!, title: String!, userId: Int!): CreateAnnouncement
-  updateAnnouncement(annId: Int!, content: String!, image: Upload, location: String!, reward: Int): UpdateFoundAnnouncement
-  deleteAnnouncement(annId: Int!): DeleteFoundAnnouncement
-  createChat(userId: Int!): CreateChat
-  updateChat(chatId: Int!): UpdateChat
-  createComment(announcementId: Int!, content: String!, userId: Int!): CreateComment
-  editComment(commentId: Int!, content: String!): EditComment
-  deleteComment(commentId: Int!): DeleteComment
-  createMessage(chatId: Int!, content: String!, senderId: Int!): CreateMessage
-  editMessage(content: String!, messageId: Int!): EditMessage
-  deleteMessage(messageId: Int!): DeleteMessage
-  createTags(tagList: [String]!): CreateTags
-  updateUserProfile(dateOfBirth: String, firstName: String, image: Upload, lastName: String, phoneNumber: String, usrId: Int!): UpdateUserProfile
-}
-
-"""
-Create a user mutation.
-Attributes for the class define the mutation response.
-"""
-type CreateUser {
-  id: ID
-}
-
-"""Obtain JSON Web Token mutation"""
-type ObtainJSONWebToken {
-  payload: GenericScalar!
-  refreshExpiresIn: Int!
-  token: String!
-}
-
-"""
-The `GenericScalar` scalar type represents a generic
-GraphQL scalar value that could be:
-String, Boolean, Int, Float, List or Object.
-"""
-scalar GenericScalar
 
 type Verify {
   payload: GenericScalar!
-}
-
-type Refresh {
-  payload: GenericScalar!
-  refreshExpiresIn: Int!
-  token: String!
-}
-
-type CreateAnnouncement {
-  id: ID
-}
-
-"""
-Create scalar that ignores normal serialization/deserialization, since
-that will be handled by the multipart request spec
-"""
-scalar Upload
-
-type UpdateFoundAnnouncement {
-  id: ID
-}
-
-type DeleteFoundAnnouncement {
-  id: ID
-}
-
-type CreateChat {
-  id: ID
-  chat: ChatSystem
-}
-
-type UpdateChat {
-  id: ID
-}
-
-type CreateComment {
-  id: ID
-  comment: CommentType
-}
-
-type EditComment {
-  id: ID
-  content: String
-  comment: CommentType
-}
-
-type DeleteComment {
-  msg: String
-  comment: CommentType
-}
-
-type CreateMessage {
-  id: ID
-  message: MessageType
-}
-
-type EditMessage {
-  content: String
-  message: MessageType
-}
-
-type DeleteMessage {
-  msg: String
-  message: MessageType
-}
-
-type CreateTags {
-  msg: String
-  tag: TagType
-}
-
-type UpdateUserProfile {
-  id: ID
-  dateOfBirth: String
-  phoneNumber: String
-  apiMsg: String
 }

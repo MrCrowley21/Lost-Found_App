@@ -324,9 +324,10 @@ class UpdateUserProfile(Mutation):
         phone_number = String(required = False)
         first_name = String(required = False )
         last_name = String(required = False)
+        rating =  Int(required=False)
 
     @staticmethod
-    def mutate(_,  info, image, date_of_birth, phone_number, first_name, last_name): 
+    def mutate(_,  info, image, date_of_birth, phone_number, first_name, last_name,rating): 
         user = info.context.user  
         if user.is_authenticated == False:
             return UpdateUserProfile( 
@@ -335,13 +336,16 @@ class UpdateUserProfile(Mutation):
 
 
         usr_prof = UserProfile.objects.get(user=user)   
-        apiMsg = None 
+        apiMsg = None  
+        
         if first_name and last_name is not None:    
             try:
-                api_cred = ApiCredentials.objects.get(user_profile=usr_prof)   
+                api_cred = ApiCredentials.objects.get(user_profile=usr_prof)  
+                apiMsg = "Api User Credentials already exist"  
             except:
-                try:
-                    api_cred = ApiCredentials.objects.get(username = f'{first_name} {last_name}')  
+                try: 
+                    kek = f'{first_name} {last_name}'
+                    api_cred = ApiCredentials.objects.get(username = kek)  
                     apiMsg = "Api User Name  Credentials already exist"
                 except:
                     res = api.create_user( first_name + " " + last_name )  
@@ -364,7 +368,10 @@ class UpdateUserProfile(Mutation):
         if date_of_birth is not None:
             usr_prof.date_of_birth = date_of_birth 
         if phone_number is not None:
-            usr_prof.phone = phone_number 
+            usr_prof.phone = phone_number  
+        if rating is not None:
+            usr_prof.rating = rating 
+        
         
         usr_prof.save() 
         user.save() 
