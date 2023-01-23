@@ -10,7 +10,9 @@ from datetime import datetime
 from .remote_api import RemoteAPI
 from .encryption import Encryption
 
-from .models import * 
+from .models import *  
+
+import os
 
 api = RemoteAPI() 
 enc = Encryption()
@@ -133,7 +135,7 @@ class Query(object):
 
     @staticmethod
     def resolve_user_profile(self, info, id):
-        return UserProfile.objects.get(user_id = id)
+        return UserProfile.objects.get(user_id = id) 
 
 
     @staticmethod
@@ -146,15 +148,16 @@ class Query(object):
     @staticmethod
     def resolve_announcement(self, info, **kwargs):  
         obj = Announcement.objects.get(**kwargs) 
-        obj.updateTimePassed()
-        obj.save()
+        obj.updateTimePassed()   
+        obj.save()   
         return obj 
 
 
     @staticmethod
     def resolve_found_announcements(self, info): 
         for obj in Announcement.objects.filter(annType__contains ="FOUND"):
-            obj.updateTimePassed()
+            obj.updateTimePassed() 
+
         return Announcement.objects.filter(annType__contains ="FOUND") 
 
     @staticmethod
