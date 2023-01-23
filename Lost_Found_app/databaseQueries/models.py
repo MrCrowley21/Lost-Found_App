@@ -88,7 +88,7 @@ class Announcement(models.Model):
     tags = models.ManyToManyField('Tag')
     reward = models.PositiveSmallIntegerField( default =0, blank =True)
     created_time = models.DateTimeField(auto_now_add= True)  
-    passed_time = models.CharField(max_length = 50)   
+    passed_time = models.CharField(max_length = 50)  
 
 
     def updateTimePassed(self):

@@ -327,10 +327,9 @@ class UpdateUserProfile(Mutation):
         phone_number = String(required = False)
         first_name = String(required = False )
         last_name = String(required = False)
-        rating =  Int(required=False)
 
     @staticmethod
-    def mutate(_,  info, image, date_of_birth, phone_number, first_name, last_name,rating): 
+    def mutate(_,  info, image, date_of_birth, phone_number, first_name, last_name): 
         user = info.context.user  
         if user.is_authenticated == False:
             return UpdateUserProfile( 
@@ -372,8 +371,6 @@ class UpdateUserProfile(Mutation):
             usr_prof.date_of_birth = date_of_birth 
         if phone_number is not None:
             usr_prof.phone = phone_number  
-        if rating is not None:
-            usr_prof.rating = rating 
         
         
         usr_prof.save() 
