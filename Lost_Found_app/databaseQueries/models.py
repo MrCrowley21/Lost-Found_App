@@ -164,19 +164,29 @@ class Announcement(models.Model):
         return ""
 
 
+
 class Message(models.Model):
-    sender_id = models.ForeignKey('UserProfile', on_delete=models.PROTECT)
-    chat_id = models.ForeignKey('Chat', on_delete=models.PROTECT)
-    registered_time = models.DateTimeField(default=datetime.now)
-    edited_time = models.DateTimeField()
-    is_read = models.BooleanField(default=False)
-    content = models.TextField(max_length=1000)
+    sender = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
+    text = models.TextField()
+    created = models.DateTimeField(auto_created=True)
+    deleted = models.BooleanField(default=False)
+    read = models.BooleanField(default=False)
 
 
 class Chat(models.Model):
-    user_id = models.ForeignKey('UserProfile', on_delete=models.PROTECT)
-    register_date = models.DateTimeField(default=datetime.now, blank=True) 
-    close_date = models.DateTimeField()  
+    participants = models.ManyToManyField(UserProfile)
+    name = models.CharField(max_length=200, blank=True)
+    messages = models.ManyToManyField(Message, blank=True)
+    last_modified = models.DateTimeField(auto_now=True) 
+    ### 
+    # 0 : Closed 
+    # 1 : Active
+    # 2 : Awaiting
+    state = models.PositiveIntegerField(blank=True,default=0)   
+    initiator =  models.CharField(max_length=200, blank=True) 
+    acceptor =  models.CharField(max_length=200, blank=True)
+    key = models.TextField(blank=True)
+
 
     
 class Comment(models.Model):

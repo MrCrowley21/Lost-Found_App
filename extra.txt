@@ -1,0 +1,8 @@
+django-channels-graphql-ws==0.9.1 
+django-filter==22.1 
+google-auth-oauthlib==0.4.1  
+pymongo==3.12.3
+channels~=3.0.5
+django-push-notifications~=3.0.0
+asgiref~=3.5.2
+pyotp~=2.8.0 

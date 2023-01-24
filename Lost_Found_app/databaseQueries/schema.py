@@ -4,13 +4,17 @@ from django.contrib.auth.models import User
 from graphene_file_upload.scalars import Upload 
 import graphql_jwt   
 
-from datetime import datetime   
+from datetime import datetime    
+from graphene_django.filter import DjangoFilterConnectionField
+
 
 
 from .remote_api import RemoteAPI
 from .encryption import Encryption
 
-from .models import *  
+from .models import *   
+from .serializer import ChatType, ChatFilter, MessageType, MessageFilter 
+
 
 import os
 
@@ -55,44 +59,6 @@ class AnnouncementType(DjangoObjectType):
         )
 
 
-############################### STILL NOT
-
-# class ChatSystem(DjangoObjectType):
-#     class Meta:
-#         model = Chat
-#         fields = (
-#             'register_date',   
-#             'id', 
-#             'close_date'
-#         )
-
-
-# class MessageType(DjangoObjectType):
-#     class Meta:
-#         model = Message
-#         fields = (
-#             #'sender_id',
-#             #'chat_id', 
-#             'id',
-#             'registered_date',
-#             'edited_date',
-#             'is_read',
-#             'content'
-#         )
-
-
-# class CommentType(DjangoObjectType):
-#     class Meta:
-#         model = Comment
-#         fields = (
-#             #'user_id', 
-#             'id', 
-#             #'announcement_id',
-#             'registered_date',
-#             'edited_date',
-#             'content'
-#         )
-
 
 class TagType(DjangoObjectType):
     class Meta:
@@ -103,7 +69,7 @@ class TagType(DjangoObjectType):
         )
 
 
-class Query(object):
+class Query(ObjectType):
     """
     User queries.
     """
@@ -120,9 +86,11 @@ class Query(object):
 
     tags = List(TagType) 
 
-    # chats = List(ChatSystem)
-    # messages = List(MessageType)
-    # comments = List(CommentType) 
+    chats = DjangoFilterConnectionField(ChatType, filterset_class=ChatFilter)
+    chat = Field(ChatType, id=ID())
+    messages = DjangoFilterConnectionField(
+        MessageType,
+        filterset_class=MessageFilter, id=ID())
 
 
     @staticmethod
@@ -186,17 +154,22 @@ class Query(object):
     def resolve_tags(self, info):
         return Tag.objects.all()
 
-    # @staticmethod
-    # def resolve_chats(self, info):
-    #     return Chat.objects.all()
+    @staticmethod
+    def resolve_chats(cls, info, **kwargs):
+        user = info.context.user  
+        kek = UserProfile.objects.get(user=user)
+        return Chat.objects.prefetch_related("messages", "participants").filter(participants=kek,state=1) | Chat.objects.prefetch_related("messages", "participants").filter(participants=kek,state=2,acceptor=user.email)
 
-    # @staticmethod
-    # def resolve_messages(self, info):
-    #     return Message.objects.all()
+    @staticmethod
+    def resolve_chat(cls, info, id, **kwargs):
+        user = info.context.user
+        return Chat.objects.prefetch_related("participants").get(participants=UserProfile.objects.get(user=user), id=id)
 
-    # @staticmethod
-    # def resolve_comments(self, info):
-    #     return Comment.objects.all()
+    @staticmethod
+    def resolve_messages(cls, info, id, **kwargs):
+        user = info.context.user
+        chat = Chat.objects.prefetch_related("messages", "participants").get(participants=UserProfile.objects.get(user=user), id=id)
+        return chat.messages.all()
 
 
 class CreateUser(Mutation):
@@ -381,147 +354,89 @@ class UpdateUserProfile(Mutation):
                 api_msg = apiMsg ) 
 
 
+class CreateChat(Mutation):
+    chat = Field(ChatType)
+    error = String()
 
-# class CreateChat(Mutation):
-#     id = ID()
+    class Arguments:
+        user_id = ID (required=True) 
+        name = String()
+        key = String() 
+    
 
-#     class Arguments:
-#         user_id = Int(required=True)
-
-#     chat = Field(ChatSystem)
-#     @staticmethod
-#     def mutate(_, info, user_id): 
-#         chat = Chat(
-#             user_id=UserProfile.objects.get(user_id=user_id), 
-#             # register_date = datetime.now() 
-#             )  
-#         chat.save() 
-#         return CreateChat(
-#             id=chat.id
-#         )
-
-
-# class UpdateChat(Mutation):
-#     id = ID()
-
-#     class Arguments:
-#         chat_id = Int(required=True)
-
-#     #announce = Field(ChatSystem)
-#     @staticmethod
-#     def mutate(_,  info, chat_id):
-#         chat = Chat.objects.get(id=chat_id)
-#         chat.close_date = datetime.now() 
-#         chat.save()
-#         return UpdateChat(id=chat.id) 
-
-
+    @classmethod
+    def mutate(cls, _, info, user_id, name, key): 
+        user = info.context.user   
+        emails = str ( User.objects.get(id=user_id).email)
+        emails = emails + f',{user.email}' 
+        emails = emails.split(",")
+        if len(emails) > 2:
+            return CreateChat(error="you cannot have more then two participants if this is not a group")
+        else:
+            chat = Chat.objects.create(
+                name=name, 
+                key=key, 
+                initiator = user.email, 
+                state = 2
+            )
+            users = []
+            for email in emails:
+                kek = User.objects.get(email=email)
+                usr = UserProfile.objects.get(user=kek)
+                users.append(usr) 
+                if email != user.email:
+                    chat.acceptor = email
+            chat.participants.add(*users) 
+            chat.save()
+    
+        return CreateChat(chat=chat) 
 
 
+class AcceptChat(Mutation):
+    chat = Field(ChatType)
+    error = String() 
+    key = String()
 
-##################### COMMENTS ########################################################   
-# class CreateComment(Mutation):
-#     id = ID()
+    class Arguments:
+        chat_id = ID()
+    
+    @classmethod
+    def mutate(cls, _, info, chat_id):  
+        user = info.context.user 
+        chat = Chat.objects.prefetch_related("participants").get(participants=UserProfile.objects.get(user=user), id=chat_id)
+        chat.state = 1 
+        chat.save()
+        return AcceptChat(chat=chat, key=chat.key)
 
-#     class Arguments: 
-#         announcement_id = Int(required=True) 
-#         user_id =  Int(required=True)
-#         content = String(required=True)
 
-#     comment = Field(CommentType) 
-#     @staticmethod
-#     def mutate(_, info, announcement_id, content,user_id ):
-#         comment = Comment(   
-#             user_id  =  UserProfile.objects.get(user_id=user_id),  
-#             content =  content,  
-#             announcement_id = Announcement.objects.get( id = announcement_id)  )
-#         comment.save()   
-#         return CreateComment( 
-#             id = comment.id
-#         )  
+class SendMessage(Mutation):
+    message = Field(MessageType)
 
-# class EditComment(Mutation): 
-#     id = ID()
-#     content = String()
+    class Arguments:
+        message = String(required=True)
+        chat_id = Int(required=True)
 
-#     class Arguments:  
-#         comment_id = Int(required=True)
-#         content = String(required=True)
+    @classmethod
+    def mutate(cls, _, info, message, chat_id):
+        user = info.context.user
+        chat = Chat.objects.prefetch_related("participants").get(participants=UserProfile.objects.get(user=user), id=chat_id) 
+        if chat.state == 1:
+            message = Message.objects.create(
+                sender= UserProfile.objects.get(user =user),
+                text=message,
+                created=datetime.now()
+            )
+            chat.messages.add(message)
+            # users = [usr for usr in chat.participants.all() if usr != user]
+            # for usr in users:
+            #     OnNewMessage.broadcast(payload=chat, group=chat.name) 
+            chat.save()
+            return SendMessage(message=message)  
+        else:
+            return SendMessage(message="Chat not Accepted by the 2nd  !")  
 
-#     comment = Field(CommentType) 
-#     @staticmethod
-#     def mutate(_, info, comment_id, content ): 
-#         comment = Comment.objects.get(id = comment_id )
-#         comment.content = content 
-#         comment.edited_time = datetime.now()
-#         comment.save()   
-#         return EditComment(  
-#             id = comment.id, 
-#             content = comment.content
-#         ) 
 
-# class DeleteComment(Mutation):
-#     msg  = String()
-#     class Arguments:  
-#         comment_id = Int(required=True)
-#     comment = Field(CommentType) 
-#     @staticmethod
-#     def mutate(_, info, comment_id): 
-#         comment = Comment.objects.get(id = comment_id ).delete()
-#         return DeleteComment( 
-#             msg = "Comment Deleted succesfully"
-#         )
 
-# ############################# Message ###############################################   
-# class CreateMessage(Mutation):
-#     id = ID()
-#     class Arguments: 
-#         chat_id = Int(required=True) 
-#         sender_id = Int(required=True)
-#         content = String(required=True) 
-
-#     message = Field(MessageType) 
-#     @staticmethod
-#     def mutate(_, info, chat_id, content,sender_id ):
-#         message = Message(   
-#             sender_id  =   UserProfile.objects.get(user_id=sender_id),   
-#             content =  content, 
-#             chat_id = Chat.objects.get( id = chat_id), 
-#             registered_time = datetime.now(),
-#              )
-#         message.save()   
-#         return CreateMessage( 
-#             id = message.id
-#         )  
-
-# class EditMessage(Mutation):
-#     content = String()
-#     class Arguments:  
-#         message_id = Int(required=True)
-#         content = String(required=True)
-
-#     message = Field(MessageType) 
-#     @staticmethod
-#     def mutate(_, info, message_id, content ): 
-#         message = Message.objects.get(id = message_id )
-#         message.content = content 
-#         message.edited_time = datetime.now()
-#         message.save()   
-#         return EditMessage( 
-#             content = message.content
-#         )  
-
-# class DeleteMessage(Mutation):
-#     msg  = String()
-#     class Arguments:  
-#         message_id = Int(required=True)
-#     message = Field(MessageType) 
-#     @staticmethod
-#     def mutate(_, info, message_id): 
-#         message = Message.objects.get(id = message_id ).delete()
-#         return DeleteMessage( 
-#             msg = "Message Deleted succesfully"
-#         )
 
         
 class CreateTags(Mutation):
@@ -574,8 +489,9 @@ class Mutation(ObjectType):
      Mutations for Creating and Updating Chat 
     """ 
 
-    # create_chat = CreateChat.Field() 
-    # update_chat = UpdateChat.Field()  
+    create_chat = CreateChat.Field() 
+    accept_chat = AcceptChat.Field()  
+    send_message = SendMessage.Field() 
 
     """
     Mutations for Creating and Updating Comments
