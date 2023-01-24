@@ -5,7 +5,6 @@ from graphene_file_upload.scalars import Upload
 import graphql_jwt   
 
 from datetime import datetime    
-from graphene_django.filter import DjangoFilterConnectionField
 
 
 
@@ -13,7 +12,6 @@ from .remote_api import RemoteAPI
 from .encryption import Encryption
 
 from .models import *   
-from .serializer import ChatType, ChatFilter, MessageType, MessageFilter 
 
 
 import os
@@ -66,7 +64,28 @@ class TagType(DjangoObjectType):
         fields = (
             'id', 
             'name'
+        ) 
+
+
+class ChatType(DjangoObjectType):
+    class Meta:
+        model = Chat
+        fields = ( 
+            'name',
+            'participants',
+            'state'
         )
+
+
+class MessageType(DjangoObjectType):
+    class Meta:
+        model = Message
+        fields = ( 
+            'created',
+            'read',
+            'text'
+        )
+
 
 
 class Query(ObjectType):
@@ -86,11 +105,9 @@ class Query(ObjectType):
 
     tags = List(TagType) 
 
-    chats = DjangoFilterConnectionField(ChatType, filterset_class=ChatFilter)
+    chats = List(ChatType)
     chat = Field(ChatType, id=ID())
-    messages = DjangoFilterConnectionField(
-        MessageType,
-        filterset_class=MessageFilter, id=ID())
+    messages = List(MessageType)
 
 
     @staticmethod
@@ -364,8 +381,8 @@ class CreateChat(Mutation):
         key = String() 
     
 
-    @classmethod
-    def mutate(cls, _, info, user_id, name, key): 
+    @staticmethod
+    def mutate(info, user_id, name, key): 
         user = info.context.user   
         emails = str ( User.objects.get(id=user_id).email)
         emails = emails + f',{user.email}' 
@@ -393,20 +410,20 @@ class CreateChat(Mutation):
 
 
 class AcceptChat(Mutation):
-    chat = Field(ChatType)
-    error = String() 
     key = String()
+    id = ID()
 
     class Arguments:
-        chat_id = ID()
+        chat_id = ID(required=True)
     
-    @classmethod
-    def mutate(cls, _, info, chat_id):  
-        user = info.context.user 
-        chat = Chat.objects.prefetch_related("participants").get(participants=UserProfile.objects.get(user=user), id=chat_id)
+    @staticmethod
+    def mutate(_, info, chat_id):  
+        user = info.context.user  
+        kek = UserProfile.objects.get(id=user.id)
+        chat = Chat.objects.get(participants=kek, id=chat_id)
         chat.state = 1 
         chat.save()
-        return AcceptChat(chat=chat, key=chat.key)
+        return AcceptChat(id = chat.id, key = chat.key)
 
 
 class SendMessage(Mutation):
@@ -416,10 +433,11 @@ class SendMessage(Mutation):
         message = String(required=True)
         chat_id = Int(required=True)
 
-    @classmethod
-    def mutate(cls, _, info, message, chat_id):
+    @staticmethod
+    def mutate(info, message, chat_id):
         user = info.context.user
-        chat = Chat.objects.prefetch_related("participants").get(participants=UserProfile.objects.get(user=user), id=chat_id) 
+        kek = UserProfile.objects.get(user=user)
+        chat = Chat.objects.get(participants=kek, id=chat_id) 
         if chat.state == 1:
             message = Message.objects.create(
                 sender= UserProfile.objects.get(user =user),
@@ -427,13 +445,10 @@ class SendMessage(Mutation):
                 created=datetime.now()
             )
             chat.messages.add(message)
-            # users = [usr for usr in chat.participants.all() if usr != user]
-            # for usr in users:
-            #     OnNewMessage.broadcast(payload=chat, group=chat.name) 
             chat.save()
             return SendMessage(message=message)  
         else:
-            return SendMessage(message="Chat not Accepted by the 2nd  !")  
+            return SendMessage(message=None)  
 
 
 
