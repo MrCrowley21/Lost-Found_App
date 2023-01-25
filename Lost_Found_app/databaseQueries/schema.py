@@ -10,7 +10,9 @@ from datetime import datetime
 from .remote_api import RemoteAPI
 from .encryption import Encryption
 
-from .models import *  
+from .models import *   
+
+from .otp_sending import * 
 
 import os
 
@@ -25,7 +27,15 @@ class UserType(DjangoObjectType):
             'email', 
             'first_name',
             'last_name', 
-        ) 
+        )  
+
+class OTPvType(DjangoObjectType):
+    class Meta:
+        model = OTPVerification
+        fields = (
+            'id',
+            'secret', 
+            'hotp') 
 class UserProfileType(DjangoObjectType):
     class Meta:
         model = UserProfile 
@@ -211,7 +221,37 @@ class CreateUser(Mutation):
         user = User.objects.create_user(email=email,
                                         password=password,
                                         )
-        return CreateUser( id=user.id )  
+        return CreateUser( id=user.id )   
+
+
+class SendOtpVerification(Mutation):
+    id = ID()
+    class Arguments:
+        email = String(required=True)
+    @staticmethod
+    def mutate(_, info, email):
+        secret_code, hotp_at = send_otp_code(email, int(time.time()))        
+        otp = OTPVerification( 
+            secret = secret_code,
+            hotp = hotp_at
+        ) 
+        otp.save()
+        return SendOtpVerification( id=otp.id )   
+
+class GetOtpVerification(Mutation):
+    msg = String()
+    class Arguments:
+        otp_id = Int()
+        code  = String()
+    @staticmethod
+    def mutate(_, info, otp_id,code):
+        otp = OTPVerification.objects.get(id=otp_id)
+        bl = check_otp_code(otp.secret, otp.hotp, code) 
+
+        if bl == True:
+            return GetOtpVerification(msg="Success") 
+        else:
+            return GetOtpVerification(msg="Failure")
 
 
         
@@ -270,7 +310,8 @@ class DeleteAnnouncement(Mutation):
         Announcement.objects.get(id = ann_id ).delete()  
         return DeleteAnnouncement( 
             id = ann_id
-        )
+        ) 
+
 
 
 class UpdateAnnouncement(Mutation): 
@@ -571,7 +612,8 @@ class Mutation(ObjectType):
     delete_announcement = DeleteAnnouncement.Field() 
 
     """ 
-     Mutations for Creating and Updating Chat 
+     Mutations for Creating and Updating Chat  
+
     """ 
 
     # create_chat = CreateChat.Field() 
@@ -588,7 +630,10 @@ class Mutation(ObjectType):
     """   
     # create_message = CreateMessage.Field() 
     # edit_message = EditMessage.Field() 
-    # delete_message = DeleteMessage.Field()  
+    # delete_message = DeleteMessage.Field()   
+
+    send_otp_verification  = SendOtpVerification.Field() 
+    get_otp_verification  = GetOtpVerification.Field()
 
     """
     Mutation Tags 

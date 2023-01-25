@@ -60,6 +60,7 @@ class UserProfile(models.Model):
     date_of_birth = models.DateField(blank = True,default=None)
     rating = models.PositiveIntegerField(blank=True,default=0)   
 
+
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
@@ -71,7 +72,12 @@ class ApiCredentials(models.Model):
     remote_id = models.CharField( max_length = 1000, blank=True)
     secret = models.CharField(max_length = 1000, blank=True)
     created_at = models.CharField(max_length=20, blank=True) 
-    username = models.CharField(max_length=70, blank=True)
+    username = models.CharField(max_length=70, blank=True) 
+
+class OTPVerification(models.Model):
+    ## OTP
+    secret =  models.CharField(max_length=100, blank=True)  
+    hotp =  models.IntegerField(blank=True, default=0) 
 
 
 
