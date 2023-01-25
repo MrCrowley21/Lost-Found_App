@@ -170,19 +170,20 @@ class Announcement(models.Model):
         return ""
 
 
+
 class Message(models.Model):
-    sender = models.ForeignKey('UserProfile', on_delete=models.CASCADE)
+    sender = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
     text = models.TextField()
-    created = models.DateTimeField(auto_now_add= True)
+    created = models.DateTimeField(auto_created=True)
     deleted = models.BooleanField(default=False)
-    read = models.BooleanField(default=False)  
+    read = models.BooleanField(default=False)
 
 
-class Chat(models.Model): 
+class Chat(models.Model):
     participants = models.ManyToManyField(UserProfile)
     name = models.CharField(max_length=200, blank=True)
     messages = models.ManyToManyField(Message, blank=True)
-    last_modified = models.DateTimeField(auto_now_add= True) 
+    last_modified = models.DateTimeField(auto_now=True) 
     ### 
     # 0 : Closed 
     # 1 : Active
