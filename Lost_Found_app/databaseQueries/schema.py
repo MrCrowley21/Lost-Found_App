@@ -2,10 +2,8 @@ from graphene import Mutation, ObjectType, List, Field, Int, String, ID
 from graphene_django.types import DjangoObjectType
 from django.contrib.auth.models import User
 from graphene_file_upload.scalars import Upload 
-import graphql_jwt   
-
-from datetime import datetime    
-
+import graphql_jwt    
+import datetime    
 
 from .remote_api import RemoteAPI
 from .encryption import Encryption
@@ -44,8 +42,10 @@ class UserProfileType(DjangoObjectType):
             'image', 
             'phone',
             'date_of_birth', 
-            'rating'
-        ) 
+            'rating', 
+            'public_key'
+        )  
+
 
 class AnnouncementType(DjangoObjectType):
     class Meta:
@@ -79,10 +79,15 @@ class ChatType(DjangoObjectType):
     class Meta:
         model = Chat
         fields = ( 
+            'id',
             'name',
             'participants',
+            'messages', 
+            'key',
+            'initiator', 
+            'acceptor',
             'state'
-        )
+        ) 
 
 
 class MessageType(DjangoObjectType):
@@ -90,7 +95,7 @@ class MessageType(DjangoObjectType):
         model = Message
         fields = ( 
             'created',
-            'read',
+            'sender',
             'text'
         )
 
@@ -275,7 +280,7 @@ class CreateAnnouncement(Mutation):
             content =  content, 
             annType = annType.upper(), 
             reward = reward, 
-            created_time = datetime.now()
+            created_time = datetime.datetime.now()
             ) 
         announce.save() 
         try:    
@@ -356,10 +361,11 @@ class UpdateUserProfile(Mutation):
         date_of_birth = String(required=False) 
         phone_number = String(required = False)
         first_name = String(required = False )
-        last_name = String(required = False)
+        last_name = String(required = False) 
+        public_key = String(required = False)
 
     @staticmethod
-    def mutate(_,  info, image, date_of_birth, phone_number, first_name, last_name): 
+    def mutate(_,  info, image, date_of_birth, phone_number, first_name, last_name, public_key): 
         user = info.context.user  
         if user.is_authenticated == False:
             return UpdateUserProfile( 
@@ -400,7 +406,9 @@ class UpdateUserProfile(Mutation):
         if date_of_birth is not None:
             usr_prof.date_of_birth = date_of_birth 
         if phone_number is not None:
-            usr_prof.phone = phone_number  
+            usr_prof.phone = phone_number 
+        if public_key is not None:
+            usr_prof.public_key = public_key  
         
         
         usr_prof.save() 
@@ -422,7 +430,7 @@ class CreateChat(Mutation):
     
 
     @staticmethod
-    def mutate(info, user_id, name, key): 
+    def mutate(_, info, user_id, name, key): 
         user = info.context.user   
         emails = str ( User.objects.get(id=user_id).email)
         emails = emails + f',{user.email}' 
@@ -463,7 +471,21 @@ class AcceptChat(Mutation):
         chat = Chat.objects.get(participants=kek, id=chat_id)
         chat.state = 1 
         chat.save()
-        return AcceptChat(id = chat.id, key = chat.key)
+        return AcceptChat(id = chat.id, key = chat.key) 
+
+class DeclineChat(Mutation):
+    msg = String() 
+
+    class Arguments:
+        chat_id = ID(required=True)
+    @staticmethod
+    def mutate(_, info, chat_id):  
+        user = info.context.user  
+        kek = UserProfile.objects.get(id=user.id)
+        chat = Chat.objects.get(participants=kek, id=chat_id)
+        chat.state = 0 
+        chat.save()
+        return DeclineChat(msg = f'declined from {user.email}')
 
 
 class SendMessage(Mutation):
@@ -474,7 +496,7 @@ class SendMessage(Mutation):
         chat_id = Int(required=True)
 
     @staticmethod
-    def mutate(info, message, chat_id):
+    def mutate(_, info, message, chat_id):
         user = info.context.user
         kek = UserProfile.objects.get(user=user)
         chat = Chat.objects.get(participants=kek, id=chat_id) 
@@ -482,7 +504,7 @@ class SendMessage(Mutation):
             message = Message.objects.create(
                 sender= UserProfile.objects.get(user =user),
                 text=message,
-                created=datetime.now()
+                created= datetime.datetime.now()
             )
             chat.messages.add(message)
             chat.save()
@@ -546,7 +568,8 @@ class Mutation(ObjectType):
     """ 
 
     create_chat = CreateChat.Field() 
-    accept_chat = AcceptChat.Field()  
+    accept_chat = AcceptChat.Field()   
+    decline_chat = DeclineChat.Field()
     send_message = SendMessage.Field() 
 
     """
