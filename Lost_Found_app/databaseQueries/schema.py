@@ -7,7 +7,6 @@ import graphql_jwt
 from datetime import datetime    
 
 
-
 from .remote_api import RemoteAPI
 from .encryption import Encryption
 

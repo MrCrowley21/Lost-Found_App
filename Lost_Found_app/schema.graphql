@@ -1,0 +1,185 @@
+"""Projects main Query class, this will inherit multiple queries."""
+type Query {
+  users: [UserType]
+  user(id: Int): UserType
+  userProfile(id: Int): UserProfileType
+  me: UserProfileType
+  announcement(id: Int): AnnouncementType
+  foundAnnouncements: [AnnouncementType]
+  lostAnnouncements: [AnnouncementType]
+  announcementsSearchByContent(search: String): [AnnouncementType]
+  announcementsByTag(annType: String, tag: String): [AnnouncementType]
+  tags: [TagType]
+  chats: [ChatType]
+  chat(id: ID): ChatType
+  messages: [MessageType]
+}
+
+type UserType {
+  id: ID!
+  firstName: String!
+  lastName: String!
+  email: String!
+}
+
+type UserProfileType {
+  id: ID!
+  user: UserType!
+  phone: String!
+  location: String!
+  creditDetails: String!
+  image: String!
+  dateOfBirth: Date!
+  rating: Int!
+  announcementSet: [AnnouncementType!]!
+  messageSet: [MessageType!]!
+  chatSet: [ChatType!]!
+}
+
+"""
+The `Date` scalar type represents a Date
+value as specified by
+[iso8601](https://en.wikipedia.org/wiki/ISO_8601).
+"""
+scalar Date
+
+type AnnouncementType {
+  id: ID!
+  userProfile: UserProfileType!
+  title: String!
+  streetName: String!
+  coordonates: String!
+  image: String!
+  annType: String!
+  content: String!
+  tags: [TagType!]!
+  reward: Int!
+  passedTime: String!
+}
+
+type TagType {
+  id: ID!
+  name: String!
+}
+
+type MessageType {
+  created: DateTime!
+  text: String!
+  read: Boolean!
+}
+
+"""
+The `DateTime` scalar type represents a DateTime
+value as specified by
+[iso8601](https://en.wikipedia.org/wiki/ISO_8601).
+"""
+scalar DateTime
+
+type ChatType {
+  participants: [UserProfileType!]!
+  name: String!
+  state: Int!
+}
+
+"""
+Projects main Mutation class, this will 
+inherit multiple mutations.
+"""
+type Mutation {
+  createUser(email: String!, password: String!): CreateUser
+
+  """Obtain JSON Web Token mutation"""
+  login(email: String!, password: String!): ObtainJSONWebToken
+  verifyToken(token: String): Verify
+  refreshToken(token: String): Refresh
+  updateUserProfile(dateOfBirth: String, firstName: String, image: Upload, lastName: String, phoneNumber: String): UpdateUserProfile
+  createNewAnnouncement(annType: String!, content: String!, coordonates: String!, image: Upload, reward: Int, streetName: String!, tag: String!, title: String!): CreateAnnouncement
+  updateAnnouncement(annId: Int!, content: String!, coordonates: String, image: Upload, reward: Int, streetName: String, title: String): UpdateAnnouncement
+  deleteAnnouncement(annId: Int!): DeleteAnnouncement
+  createChat(key: String, name: String, userId: ID!): CreateChat
+  acceptChat(chatId: ID!): AcceptChat
+  sendMessage(chatId: Int!, message: String!): SendMessage
+  sendOtpVerification(email: String!): SendOtpVerification
+  getOtpVerification(code: String, otpId: Int): GetOtpVerification
+  createTags(tagList: [String]!): CreateTags
+}
+
+type CreateUser {
+  id: ID
+}
+
+"""Obtain JSON Web Token mutation"""
+type ObtainJSONWebToken {
+  payload: GenericScalar!
+  refreshExpiresIn: Int!
+  token: String!
+}
+
+"""
+The `GenericScalar` scalar type represents a generic
+GraphQL scalar value that could be:
+String, Boolean, Int, Float, List or Object.
+"""
+scalar GenericScalar
+
+type Verify {
+  payload: GenericScalar!
+}
+
+type Refresh {
+  payload: GenericScalar!
+  refreshExpiresIn: Int!
+  token: String!
+}
+
+type UpdateUserProfile {
+  apiMsg: String
+  msg: String
+}
+
+"""
+Create scalar that ignores normal serialization/deserialization, since
+that will be handled by the multipart request spec
+"""
+scalar Upload
+
+type CreateAnnouncement {
+  id: ID
+  msg: String
+}
+
+type UpdateAnnouncement {
+  id: ID
+  msg: String
+}
+
+type DeleteAnnouncement {
+  id: ID
+}
+
+type CreateChat {
+  chat: ChatType
+  error: String
+}
+
+type AcceptChat {
+  key: String
+  id: ID
+}
+
+type SendMessage {
+  message: MessageType
+}
+
+type SendOtpVerification {
+  id: ID
+}
+
+type GetOtpVerification {
+  msg: String
+}
+
+type CreateTags {
+  msg: String
+  tag: TagType
+}
