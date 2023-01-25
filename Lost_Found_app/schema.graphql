@@ -31,6 +31,7 @@ type UserProfileType {
   image: String!
   dateOfBirth: Date!
   rating: Int!
+  publicKey: String!
   announcementSet: [AnnouncementType!]!
   messageSet: [MessageType!]!
   chatSet: [ChatType!]!
@@ -64,8 +65,8 @@ type TagType {
 
 type MessageType {
   created: DateTime!
+  sender: UserProfileType!
   text: String!
-  read: Boolean!
 }
 
 """
@@ -76,9 +77,14 @@ value as specified by
 scalar DateTime
 
 type ChatType {
+  id: ID!
   participants: [UserProfileType!]!
   name: String!
+  messages: [MessageType!]!
   state: Int!
+  initiator: String!
+  acceptor: String!
+  key: String!
 }
 
 """
@@ -92,12 +98,13 @@ type Mutation {
   login(email: String!, password: String!): ObtainJSONWebToken
   verifyToken(token: String): Verify
   refreshToken(token: String): Refresh
-  updateUserProfile(dateOfBirth: String, firstName: String, image: Upload, lastName: String, phoneNumber: String): UpdateUserProfile
+  updateUserProfile(dateOfBirth: String, firstName: String, image: Upload, lastName: String, phoneNumber: String, publicKey: String): UpdateUserProfile
   createNewAnnouncement(annType: String!, content: String!, coordonates: String!, image: Upload, reward: Int, streetName: String!, tag: String!, title: String!): CreateAnnouncement
   updateAnnouncement(annId: Int!, content: String!, coordonates: String, image: Upload, reward: Int, streetName: String, title: String): UpdateAnnouncement
   deleteAnnouncement(annId: Int!): DeleteAnnouncement
   createChat(key: String, name: String, userId: ID!): CreateChat
   acceptChat(chatId: ID!): AcceptChat
+  declineChat(chatId: ID!): DeclineChat
   sendMessage(chatId: Int!, message: String!): SendMessage
   sendOtpVerification(email: String!): SendOtpVerification
   getOtpVerification(code: String, otpId: Int): GetOtpVerification
@@ -165,6 +172,10 @@ type CreateChat {
 type AcceptChat {
   key: String
   id: ID
+}
+
+type DeclineChat {
+  msg: String
 }
 
 type SendMessage {
