@@ -13,10 +13,7 @@ from .encryption import Encryption
 
 from .models import *   
 
-<<<<<<< HEAD
 from .otp_sending import * 
-=======
->>>>>>> master
 
 import os
 
